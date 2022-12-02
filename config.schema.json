@@ -1,0 +1,39 @@
+{
+  "pluginAlias": "HomebridgeHomeWizardEnergy",
+  "pluginType": "platform",
+  "singular": true,
+  "schema": {
+    "name": {
+      "title": "Name",
+      "type": "string",
+      "required": true,
+      "default": "Homebridge HomeWizard Energy"
+    },
+    "sockets": {
+      "description": "Make sure to enable Local API within the HomeWizard App for the Energy Sockets you want to use. Read more: https://homewizard-energy-api.readthedocs.io/getting-started.html#enabling-the-api",
+      "type": "array",
+      "items": {
+        "title": "Energy Socket",
+        "type": "object",
+        "description": "",
+        "properties": {
+          "name": {
+            "title": "A name to identify the Energy Socket",
+            "type": "string",
+            "placeholder": "Example: Wasmachine",
+            "required": true,
+            "description": "This is used internally. You can change this name when you add the Energy Socket to HomeKit."
+          },
+          "ip": {
+            "title": "Local IP Address",
+            "type": "string",
+            "placeholder": "Example: 192.168.1.10",
+            "required": true,
+            "description": "Make sure to enable a fixed IP address for this Energy Socket at your router. Otherwise the IP address might change and the Energy Socket will not be found.",
+            "format": "ipv4"
+          }
+        }
+      }
+    }
+  }
+}
