@@ -3,7 +3,7 @@
   "displayName": "Homebridge HomeWizard Energy",
   "name": "homebridge-homewizard-energy",
   "version": "1.0.0",
-  "description": "A short description about what your plugin does.",
+  "description": "A Homebridge plugin for HomeWizard Energy Socket's.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
