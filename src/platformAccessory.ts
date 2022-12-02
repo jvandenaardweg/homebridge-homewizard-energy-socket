@@ -151,7 +151,7 @@ export class HomeWizardEnergyAccessory {
         throw new Error(
           `Api PUT call at ${this.stateApiUrl} failed, with status ${
             response.status
-          } and response data ${JSON.stringify(response.data)}`
+          } and response data ${JSON.stringify(response)}`
         );
       }
 
