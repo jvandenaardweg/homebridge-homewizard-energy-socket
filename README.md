@@ -8,6 +8,8 @@
 
 This Homebridge plugin exposes your [HomeWizard Energy Sockets](https://www.homewizard.com/shop/wi-fi-energy-socket/) to Apple HomeKit. So you can use the Home App to manually switch - or automate - your Energy Sockets.
 
+**Important:** This plugin is new and still in development. Please report any issues you encounter.
+
 ## Getting started
 
 For Homebridge to communicate with your Energy Sockets, it is preferred they all have a fixed IP address in your network. You also need to enable the "Local API" setting from within the HomeWizard "Energy" app for each Energy Socket you want to expose to Apple HomeKit.
