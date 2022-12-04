@@ -1,5 +1,4 @@
 {
-  "private": true,
   "displayName": "Homebridge HomeWizard Energy",
   "name": "homebridge-homewizard-energy",
   "version": "1.0.2",
