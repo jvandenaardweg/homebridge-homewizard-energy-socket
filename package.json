@@ -23,23 +23,38 @@
     "build": "rimraf ./dist && tsc",
     "prepublishOnly": "npm run lint && npm run build",
     "homebridge": "homebridge -D",
-    "update": "npx npm-check-updates --interactive"
+    "update": "npx npm-check-updates --interactive",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "keywords": [
-    "homebridge-plugin"
+    "homebridge-plugin",
+    "homewizard",
+    "energy",
+    "homewizard energy",
+    "energy socket",
+    "homebridge",
+    "homekit",
+    "apple home"
   ],
   "devDependencies": {
+    "@types/jest": "^29.2.3",
     "@types/node": "^18.11.10",
+    "@types/node-fetch": "^2.6.2",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
     "@typescript-eslint/parser": "^5.45.0",
     "eslint": "^8.29.0",
     "homebridge": "^1.6.0",
+    "jest": "^29.3.1",
     "nodemon": "^2.0.20",
+    "prettier": "^2.8.0",
     "rimraf": "^3.0.2",
+    "ts-jest": "^29.0.3",
     "ts-node": "^10.9.1",
     "typescript": "^4.9.3"
   },
   "dependencies": {
+    "bonjour-service": "^1.0.14",
     "node-fetch": "^2.6.7"
   }
 }
