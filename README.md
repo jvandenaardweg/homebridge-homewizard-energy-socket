@@ -37,7 +37,7 @@ After installing this plugin, the plugin will automatically discover the Energy 
 This package is published on NPM, so available on the Homebridge plugin page
 
 1. Go to your Homebridge UI and click on "Plugins"
-2. Find `Homebridge HomeWizard Energy Socket` from `@jvandenaardweg` and click "Install"
+2. Find `Homebridge HomeWizard` and select the plugin `Homebridge Homewizard Energy Socket` from `@jvandenaardweg` and click "Install"
 3. No additional configuration is required. But make sure to follow the instructions provided by Homebridge after you enabled the plugin.
 
 After enabling the plugin, the plugin will automatically discover the Energy Sockets in your network. Is your Energy Socket not discovered? Make sure you enabled the "Local API" setting in the HomeWizard "Energy" app and then restart the Homebridge plugin and/or server.
