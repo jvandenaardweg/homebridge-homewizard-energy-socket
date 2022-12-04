@@ -4,7 +4,7 @@
   "singular": true,
   "schema": {
     "name": {
-      "title": "Name",
+      "title": "Bridge Name",
       "type": "string",
       "required": true,
       "default": "Homebridge HomeWizard Energy Socket"
