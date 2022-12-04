@@ -1,13 +1,14 @@
 {
-  "pluginAlias": "HomebridgeHomeWizardEnergySocket",
+  "pluginAlias": "HomeWizard Energy Socket",
   "pluginType": "platform",
   "singular": true,
   "schema": {
     "name": {
-      "title": "Bridge Name",
+      "title": "Plugin name",
       "type": "string",
-      "required": false,
-      "description": "Defaults to HomeWizard: Energy Socket"
+      "required": true,
+      "placeholder": "HomeWizard Energy Socket",
+      "description": "Name to use for Homebridge logging purposes. Defaults to: HomeWizard Energy Socket"
     }
   }
 }
