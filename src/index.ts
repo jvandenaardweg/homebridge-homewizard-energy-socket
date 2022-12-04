@@ -1,11 +1,11 @@
 import { API } from "homebridge";
 
 import { PLATFORM_NAME } from "./settings";
-import { HomebridgeHomeWizardEnergy } from "./platform";
+import { HomebridgeHomeWizardEnergySocket } from "./platform";
 
 /**
  * This method registers the platform with Homebridge
  */
 export = (api: API) => {
-  api.registerPlatform(PLATFORM_NAME, HomebridgeHomeWizardEnergy);
+  api.registerPlatform(PLATFORM_NAME, HomebridgeHomeWizardEnergySocket);
 };

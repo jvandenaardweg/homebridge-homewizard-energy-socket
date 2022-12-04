@@ -1,7 +1,7 @@
 import { Service, PlatformAccessory, CharacteristicValue } from "homebridge";
 import fetch from "node-fetch";
 
-import { HomebridgeHomeWizardEnergy } from "./platform";
+import { HomebridgeHomeWizardEnergySocket } from "./platform";
 import { PLATFORM_MANUFACTURER } from "./settings";
 import {
   EnergySocketAccessoryProperties,
@@ -22,7 +22,7 @@ export class EnergySocketAccessory {
   private stateApiUrl: string;
 
   constructor(
-    private readonly platform: HomebridgeHomeWizardEnergy,
+    private readonly platform: HomebridgeHomeWizardEnergySocket,
     private readonly accessory: PlatformAccessory<HomeWizardEnergyPlatformAccessoryContext>
   ) {
     const energySocket = accessory.context.energySocket;
