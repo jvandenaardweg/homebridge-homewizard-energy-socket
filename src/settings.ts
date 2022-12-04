@@ -6,7 +6,7 @@ export const PLATFORM_NAME = "HomebridgeHomeWizardEnergy";
 /**
  * This must match the name of your plugin as defined the package.json
  */
-export const PLUGIN_NAME = "homebridge-homewizard-energy";
+export const PLUGIN_NAME = "homebridge-homewizard-energy-socket";
 
 export const ENERGY_SOCKET_PRODUCT_TYPE = "HWE-SKT";
 

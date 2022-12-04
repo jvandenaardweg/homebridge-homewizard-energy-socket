@@ -4,7 +4,7 @@
 
 </p>
 
-# Homebridge plugin for HomeWizard Energy
+# Homebridge plugin for HomeWizard Energy Socket
 
 This Homebridge plugin exposes your [HomeWizard Energy Sockets](https://www.homewizard.com/shop/wi-fi-energy-socket/) to Apple HomeKit. So you can use the Home App to manually switch - or automate - your Energy Sockets.
 
