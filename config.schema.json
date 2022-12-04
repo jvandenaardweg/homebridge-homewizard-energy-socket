@@ -6,8 +6,8 @@
     "name": {
       "title": "Bridge Name",
       "type": "string",
-      "required": true,
-      "default": "Homebridge HomeWizard Energy Socket"
+      "required": false,
+      "description": "Defaults to HomeWizard: Energy Socket"
     }
   }
 }

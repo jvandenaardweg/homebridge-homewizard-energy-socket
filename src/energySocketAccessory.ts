@@ -2,12 +2,12 @@ import { Service, PlatformAccessory, CharacteristicValue } from "homebridge";
 import fetch from "node-fetch";
 
 import { HomebridgeHomeWizardEnergySocket } from "./platform";
-import { PLATFORM_MANUFACTURER } from "./settings";
 import {
   EnergySocketAccessoryProperties,
   HomeWizardApiBasicInformationResponse,
   HomeWizardEnergyPlatformAccessoryContext,
   HomeWizardApiStateResponse,
+  PLATFORM_MANUFACTURER,
 } from "./types";
 
 /**

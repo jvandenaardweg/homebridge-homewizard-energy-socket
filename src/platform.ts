@@ -10,18 +10,15 @@ import {
 } from "homebridge";
 import Bonjour, { Service as BonjourService } from "bonjour-service";
 
-import {
-  ENERGY_SOCKET_PRODUCT_TYPE,
-  MDNS_DISCOVERY_PROTOCOL,
-  MDNS_DISCOVERY_TYPE,
-  PLATFORM_NAME,
-  PLUGIN_NAME,
-} from "./settings";
+import { PLATFORM_NAME, PLUGIN_NAME } from "./settings";
 import { EnergySocketAccessory } from "./energySocketAccessory";
 import {
   EnergySocketAccessoryProperties,
+  ENERGY_SOCKET_PRODUCT_TYPE,
   HomeWizardEnergyConfig,
   HomeWizardEnergyPlatformAccessoryContext,
+  MDNS_DISCOVERY_PROTOCOL,
+  MDNS_DISCOVERY_TYPE,
   TxtRecord,
 } from "./types";
 
@@ -61,7 +58,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     this.log.debug(
       loggerPrefix,
       "Finished initializing platform:",
-      this.config.name
+      config.name
     );
 
     // this.log.debug(this.loggerPrefix,
