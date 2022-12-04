@@ -10,7 +10,7 @@ This Homebridge plugin exposes your [HomeWizard Energy Sockets](https://www.home
 
 ## Getting started
 
-For Homebridge to communicate with your Energy Sockets, it is preferred they all have a fixed IP address in your network. You also need to enable the "Local API" setting from within the HomeWizard "Energy" app for each Energy Socket.
+For Homebridge to communicate with your Energy Sockets, it is preferred they all have a fixed IP address in your network. You also need to enable the "Local API" setting from within the HomeWizard "Energy" app for each Energy Socket you want to expose to Apple HomeKit.
 
 More on this on the HomeWizard support page: [Integrating Energy with other systems (API)](https://helpdesk.homewizard.com/en/articles/5935977-integrating-energy-with-other-systems-api)
 
@@ -22,7 +22,7 @@ First, verify if all Energy Sockets have a fixed IP address in your network. If 
 2. Find the IP addresses of each Energy Socket you want to use
 3. Make sure they use a fixed IP address
 
-### Enabling the Local API setting
+### Enabling the Local API setting (required)
 
 1. Open your HomeWizard "Energy" app
 2. Go to settings and choose "Meters"
@@ -35,5 +35,7 @@ After installing this plugin, the plugin will automatically discover the Energy 
 This package is published on NPM, so available on the Homebridge plugin page
 
 1. Go to your Homebridge UI and click on "Plugins"
-2. Find `homebridge-homewizard-energy` and click "Install"
-3. Follow the instructions provided by Homebridge.
+2. Find `Homebridge HomeWizard Energy` from `@jvandenaardweg` and click "Install"
+3. No additional configuration is required. But make sure to follow the instructions provided by Homebridge after you enabled the plugin.
+
+After enabling the plugin, the plugin will automatically discover the Energy Sockets in your network. Is your Energy Socket not discovered? Make sure you enabled the "Local API" setting in the HomeWizard "Energy" app and then restart the Homebridge plugin and/or server.
