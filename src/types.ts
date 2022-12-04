@@ -40,17 +40,21 @@ export interface EnergySocketAccessoryProperties {
   type: string;
 }
 
-// extend when needed
+/**
+ * See config.schema.json for the configuration options.
+ */
 export interface HomeWizardEnergyConfig extends PlatformConfig {
-  empty: boolean;
+  name: string;
 }
 
 /**
+ * The /api/v1/state endpoint returns the actual state of the Energy Socket. This endpoint is only available for the HWE-SKT.
+ *
  * This response tells that the socket is ‘on’, switch-lock is ‘off’ and the brightness of the LED ring is set to maximum.
  *
  * @link: https://homewizard-energy-api.readthedocs.io/endpoints.html#state-api-v1-state
  */
-export interface HomeWizardEnergySocketState {
+export interface HomeWizardApiStateResponse {
   /** The state of the switch. Returns true when the relay is in the ‘on’ state */
   power_on: boolean;
   /** When set to true, the socket cannot be turned off. */
@@ -65,7 +69,7 @@ export interface HomeWizardEnergySocketState {
  * @link: https://homewizard-energy-api.readthedocs.io/endpoints.html#basic-information-api
  * @link: https://homewizard-energy-api.readthedocs.io/getting-started.html#supported-devices
  */
-export interface HomeWizardApiResponse {
+export interface HomeWizardApiBasicInformationResponse {
   /** The product type, see Supported devices. Make sure your application can handle other values for future products. Supported devices: https://homewizard-energy-api.readthedocs.io/getting-started.html#supported-devices */
   product_type: string;
   /** A fixed, user-friendly name. This name is not the same that is set by the user in the app. */
@@ -80,4 +84,20 @@ export interface HomeWizardApiResponse {
 
 export interface HomeWizardEnergyPlatformAccessoryContext {
   energySocket: EnergySocketAccessoryProperties;
+}
+
+/**
+ * When you perform an invalid request or something went wrong, the API will respond with an error message.
+ * You have to check if the HTTP status code returns 200 OK before parsing the result.
+ * If you use an endpoint that returns JSON, you also will receive an object with some error information.
+ *
+ * @link: https://homewizard-energy-api.readthedocs.io/error-handling.html
+ */
+export enum ErrorCodes {
+  BODY_CONTAINS_INVALID_JSON = 2,
+  INVALID_VALUE_FOR_PARAMETER = 7,
+  PARAMETER_IS_NOT_MODIFIABLE = 8,
+  REQUEST_TO_LONG = 201,
+  API_DISABLED = 202,
+  INTERNAL_ERROR = 901,
 }

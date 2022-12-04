@@ -5,9 +5,9 @@ import { HomebridgeHomeWizardEnergy } from "./platform";
 import { PLATFORM_MANUFACTURER } from "./settings";
 import {
   EnergySocketAccessoryProperties,
-  HomeWizardApiResponse,
+  HomeWizardApiBasicInformationResponse,
   HomeWizardEnergyPlatformAccessoryContext,
-  HomeWizardEnergySocketState,
+  HomeWizardApiStateResponse,
 } from "./types";
 
 /**
@@ -83,7 +83,8 @@ export class EnergySocketAccessory {
 
       const result = await fetch(apiUrl);
 
-      const data = (await result.json()) as HomeWizardApiResponse;
+      const data =
+        (await result.json()) as HomeWizardApiBasicInformationResponse;
 
       this.platform.log.debug(
         this.loggerPrefix,
@@ -144,7 +145,7 @@ export class EnergySocketAccessory {
 
       // TODO: use better type
       const state =
-        (await response.json()) as Partial<HomeWizardEnergySocketState>;
+        (await response.json()) as Partial<HomeWizardApiStateResponse>;
 
       this.platform.log.debug(
         this.loggerPrefix,
@@ -198,7 +199,7 @@ export class EnergySocketAccessory {
         );
       }
 
-      const state = (await response.json()) as HomeWizardEnergySocketState;
+      const state = (await response.json()) as HomeWizardApiStateResponse;
 
       this.platform.log.debug(
         this.loggerPrefix,
