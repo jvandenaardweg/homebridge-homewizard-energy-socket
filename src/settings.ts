@@ -3,7 +3,7 @@
  *
  * This name should match `pluginAlias` in config.schema.json
  */
-export const PLATFORM_NAME = "HomeWizard Energy Socket";
+export const PLATFORM_NAME = "HomebridgeHomeWizardEnergySocket";
 
 /**
  * This must match the name of your plugin as defined the package.json
