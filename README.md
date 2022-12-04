@@ -12,9 +12,7 @@ This Homebridge plugin exposes your [HomeWizard Energy Sockets](https://www.home
 
 ## Getting started
 
-For Homebridge to communicate with your Energy Sockets, it is required to enable the "Local API" setting from within the HomeWizard "Energy" app for each Energy Socket you want to expose to Apple HomeKit. It is also you assign fixed/static IP addresses to each Energy Socket in your network.
-
-More on this on the HomeWizard support page: [Integrating Energy with other systems (API)](https://helpdesk.homewizard.com/en/articles/5935977-integrating-energy-with-other-systems-api)
+For Homebridge to communicate with your Energy Sockets, it is required to enable the "Local API" setting from within the HomeWizard "Energy" app for each Energy Socket you want to expose to Apple HomeKit. It is also adviced to assign fixed/static IP addresses to each Energy Socket in your network to improve reliability.
 
 ### Enabling the Local API setting (required)
 
@@ -22,7 +20,9 @@ More on this on the HomeWizard support page: [Integrating Energy with other syst
 2. Go to settings and choose "Meters"
 3. Tap on each Energy Socket you want to use and enable the "Local API" setting
 
-After installing this plugin, the plugin will automatically discover the Energy Sockets in your network.
+More on this on the HomeWizard support page: [Integrating Energy with other systems (API)](https://helpdesk.homewizard.com/en/articles/5935977-integrating-energy-with-other-systems-api)
+
+After installing this plugin, the plugin will automatically discover the Energy Sockets in your network that have "Local API" enabled.
 
 ### Set fixed IP addresses
 To add to the reliability of your HomeKit accessories, it is adviced to assign static/fixed IP addresses to devices you use within Apple's Home App. Not doing this might result in your Energy Socket not responding when controlling within the Home App.
