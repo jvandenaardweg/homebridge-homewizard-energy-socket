@@ -19,7 +19,7 @@
   "scripts": {
     "lint": "eslint src/**.ts --max-warnings=0",
     "watch": "npm run build && npm link && nodemon",
-    "build": "rimraf ./dist && tsc",
+    "build": "rimraf ./dist && tsc && resolve-tspaths",
     "prepublishOnly": "npm run lint && npm run build",
     "homebridge": "homebridge -D",
     "update": "npx npm-check-updates --interactive",
@@ -57,6 +57,7 @@
     "nodemon": "^2.0.20",
     "prettier": "^2.8.0",
     "release-it": "^15.5.1",
+    "resolve-tspaths": "^0.8.3",
     "rimraf": "^3.0.2",
     "ts-jest": "^29.0.3",
     "ts-node": "^10.9.1",
