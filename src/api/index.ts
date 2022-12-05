@@ -104,7 +104,7 @@ export class HomeWizardApi {
 
     this.log.info(
       this.loggerPrefix,
-      `Energy Socket is ${data.power_on ? "ON" : "OFF"}`
+      `Energy Socket state is ${data.power_on ? "ON" : "OFF"}`
     );
 
     return data;
@@ -139,7 +139,7 @@ export class HomeWizardApi {
 
     this.log.debug(
       this.loggerPrefix,
-      `Energy Socket is set to ${data.power_on ? "ON" : "OFF"}`
+      `Energy Socket state is updated to ${data.power_on ? "ON" : "OFF"}`
     );
 
     return data;
