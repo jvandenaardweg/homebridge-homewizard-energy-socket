@@ -28,6 +28,6 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/", "jest.setup.js", "vitest.setup.ts"],
+  "include": ["src/"],
   "exclude": ["src/**/*.test.ts", "src/tests/**/*"]
 }
