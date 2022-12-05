@@ -2,7 +2,7 @@
   "watch": ["src"],
   "ext": "ts",
   "ignore": [],
-  "exec": "tsc && resolve-tspaths && homebridge -I -D",
+  "exec": "tsc --project tsconfig.build.json && resolve-tspaths && homebridge -I -D",
   "signal": "SIGTERM",
   "env": {
     "NODE_OPTIONS": "--trace-warnings"

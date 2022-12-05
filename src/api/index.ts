@@ -1,5 +1,5 @@
 import { Logger } from "homebridge";
-import fetch, { Response } from "node-fetch";
+import nodeFetch, { Response } from "node-fetch";
 import {
   HomeWizardApiBasicInformationResponse,
   HomeWizardApiIdentifyResponse,
@@ -63,7 +63,7 @@ export class HomeWizardApi {
     );
 
     const method = "GET";
-    const response = await fetch(this.endpoints.basic, {
+    const response = await nodeFetch(this.endpoints.basic, {
       method,
     });
 
@@ -94,7 +94,7 @@ export class HomeWizardApi {
     );
 
     const method = "GET";
-    const response = await fetch(this.endpoints.state, {
+    const response = await nodeFetch(this.endpoints.state, {
       method,
     });
 
@@ -129,7 +129,7 @@ export class HomeWizardApi {
     );
 
     const method = "PUT";
-    const response = await fetch(this.endpoints.state, {
+    const response = await nodeFetch(this.endpoints.state, {
       method,
       body: JSON.stringify(params),
     });
@@ -177,7 +177,7 @@ export class HomeWizardApi {
 
     const method = "PUT";
 
-    const response = await fetch(this.endpoints.identify, {
+    const response = await nodeFetch(this.endpoints.identify, {
       method,
     });
 
