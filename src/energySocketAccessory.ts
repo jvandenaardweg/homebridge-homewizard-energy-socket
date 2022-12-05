@@ -4,16 +4,13 @@ import {
   CharacteristicValue,
   PlatformAccessoryEvent,
 } from "homebridge";
-import fetch from "node-fetch";
+import { HomeWizardApi } from "./api";
 
 import { HomebridgeHomeWizardEnergySocket } from "./platform";
 import {
   EnergySocketAccessoryProperties,
-  HomeWizardApiBasicInformationResponse,
   HomeWizardEnergyPlatformAccessoryContext,
-  HomeWizardApiStateResponse,
   PLATFORM_MANUFACTURER,
-  HomeWizardApiIdentifyResponse,
 } from "./types";
 
 /**
@@ -25,9 +22,7 @@ export class EnergySocketAccessory {
   private service: Service;
   private properties: EnergySocketAccessoryProperties;
   private loggerPrefix: string;
-  private stateApiUrl: string;
-  private identifyApiUrl: string;
-  private baseApiUrl: string;
+  private homeWizardApi: HomeWizardApi;
 
   constructor(
     private readonly platform: HomebridgeHomeWizardEnergySocket,
@@ -37,7 +32,9 @@ export class EnergySocketAccessory {
 
     this.properties = properties;
 
-    this.loggerPrefix = `${properties.hostname} (${properties.serialNumber}) -> `;
+    const loggerPrefix = `${properties.hostname} (${properties.serialNumber}) -> `;
+
+    this.loggerPrefix = loggerPrefix;
 
     this.platform.log.debug(
       this.loggerPrefix,
@@ -47,9 +44,11 @@ export class EnergySocketAccessory {
       accessory.context.energySocket
     );
 
-    this.baseApiUrl = `${properties.apiUrl}/api`;
-    this.stateApiUrl = `${properties.apiUrl}/api/v1/state`;
-    this.identifyApiUrl = `${properties.apiUrl}/api/v1/identify`;
+    this.homeWizardApi = new HomeWizardApi(
+      properties.apiUrl,
+      loggerPrefix,
+      this.platform.log
+    );
 
     // Set accessory information
     this.accessory
@@ -92,12 +91,9 @@ export class EnergySocketAccessory {
   }
 
   /**
-   * This method is called when the user uses the "Identify" feature in the Home app when adding
-   * new accessories.
-   *
-   * This method should blink the status light of the Energy Socket to help the user identify it.
+   * The firmware version of the device. Some API features may not work with different firmware versions.
    */
-  async handleIdentify(): Promise<void> {
+  get firmwareVersion(): number | null {
     const firmwareVersionString = this.accessory
       .getService(this.platform.Service.AccessoryInformation)
       ?.getCharacteristic(this.platform.Characteristic.FirmwareRevision).value;
@@ -105,108 +101,50 @@ export class EnergySocketAccessory {
       ? Number(firmwareVersionString)
       : null;
 
-    if (!firmwareVersion) {
-      this.platform.log.warn(
-        this.loggerPrefix,
-        "Cannot identify, firmware version is not set"
-      );
+    return firmwareVersion;
+  }
 
-      return;
-    }
-
-    // Check if firmware version is 3.00 or later, as the identify API is not available in earlier versions
-    // See: https://homewizard-energy-api.readthedocs.io/endpoints.html#identify-api-v1-identify
-    if (firmwareVersion < 3) {
-      this.platform.log.warn(
-        this.loggerPrefix,
-        "Cannot identify, this feature is only available on Energy Sockets with firmware version 3.00 or later"
-      );
-
-      return;
-    }
-
-    this.platform.log.debug(this.loggerPrefix, "Identify requested!");
-
+  /**
+   * This method is called when the user uses the "Identify" feature in the Home app when adding
+   * new accessories.
+   *
+   * This method should blink the status light of the Energy Socket to help the user identify it.
+   */
+  async handleIdentify(): Promise<void> {
     try {
-      const response = await fetch(this.identifyApiUrl, {
-        method: "PUT",
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          `Api PUT call at ${this.identifyApiUrl} failed, with status ${
-            response.status
-          } and response data ${JSON.stringify(response)}`
-        );
-      }
-
-      const data = (await response.json()) as HomeWizardApiIdentifyResponse;
-
-      this.platform.log.debug(
-        this.loggerPrefix,
-        `Energy Socket identified: ${data.identify}`
-      );
-
-      // this.state.On = value as boolean;
-    } catch (err) {
-      let errorMessage =
+      await this.homeWizardApi.putIdentify(this.firmwareVersion);
+    } catch (error) {
+      const fallbackErrorMessage =
         "A unknown error occurred while identifying the Energy Socket";
 
-      if (err instanceof Error) {
-        errorMessage = err.message;
-      }
-
-      this.platform.log.error(this.loggerPrefix, errorMessage);
-
-      throw new this.platform.api.hap.HapStatusError(
-        this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE
-      );
+      throw this.handleAccessoryApiError(error, fallbackErrorMessage);
     }
   }
 
   async setAsyncRequiredCharacteristic(): Promise<void> {
     try {
-      this.platform.log.debug(
-        this.loggerPrefix,
-        `Fetching ${this.baseApiUrl}...`
-      );
-
-      const result = await fetch(this.baseApiUrl);
-
-      const data =
-        (await result.json()) as HomeWizardApiBasicInformationResponse;
-
-      this.platform.log.debug(
-        this.loggerPrefix,
-        "Set required characteristics using API data: ",
-        JSON.stringify(data)
-      );
+      const response = await this.homeWizardApi.getBasicInformation();
 
       this.accessory
         .getService(this.platform.Service.AccessoryInformation)
         ?.setCharacteristic(
           this.platform.Characteristic.Model,
-          `${data.product_name} (${data.product_type})` // "Energy Socket (HWE-SKT"
+          `${response.product_name} (${response.product_type})` // "Energy Socket (HWE-SKT"
         )
         .setCharacteristic(
           this.platform.Characteristic.SerialNumber,
-          data.serial // Like: "1c23e7280952"
+          response.serial // Like: "1c23e7280952"
         )
         // The firmware version of the device. Some API features may not work with different firmware versions.
         .setCharacteristic(
           this.platform.Characteristic.FirmwareRevision,
-          data.firmware_version // Like: "3.02"
+          response.firmware_version // Like: "3.02"
         );
     } catch (error) {
-      this.platform.log.error(
-        this.loggerPrefix,
-        "setAsyncCharacteristic",
-        error
-      );
+      const fallbackErrorMessage =
+        "A unknown error occurred while setting the required characteristics";
 
-      throw new this.platform.api.hap.HapStatusError(
-        this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE
-      );
+      throw this.handleAccessoryApiError(error, fallbackErrorMessage);
     }
   }
 
@@ -215,47 +153,15 @@ export class EnergySocketAccessory {
    * These are sent when the user changes the state of an accessory, for example, turning on a Light bulb.
    */
   async handleSetOn(value: CharacteristicValue): Promise<void> {
-    this.platform.log.debug(
-      this.loggerPrefix,
-      `Setting the ON state to ${value} at ${this.stateApiUrl}`
-    );
-
     try {
-      const response = await fetch(this.stateApiUrl, {
-        method: "PUT",
-        body: JSON.stringify({ power_on: value }),
+      await this.homeWizardApi.putState({
+        power_on: value as boolean,
       });
+    } catch (error) {
+      const fallbackErrorMessage =
+        "A unknown error occurred while setting the ON state";
 
-      if (!response.ok) {
-        throw new Error(
-          `Api PUT call at ${this.stateApiUrl} failed, with status ${
-            response.status
-          } and response data ${JSON.stringify(response)}`
-        );
-      }
-
-      // TODO: use better type
-      const state =
-        (await response.json()) as Partial<HomeWizardApiStateResponse>;
-
-      this.platform.log.debug(
-        this.loggerPrefix,
-        `Energy Socket is set to ${state.power_on ? "ON" : "OFF"}`
-      );
-
-      // this.state.On = value as boolean;
-    } catch (err) {
-      let errorMessage = "A unknown error occurred while setting the ON state";
-
-      if (err instanceof Error) {
-        errorMessage = err.message;
-      }
-
-      this.platform.log.error(this.loggerPrefix, errorMessage);
-
-      throw new this.platform.api.hap.HapStatusError(
-        this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE
-      );
+      throw this.handleAccessoryApiError(error, fallbackErrorMessage);
     }
   }
 
@@ -274,49 +180,30 @@ export class EnergySocketAccessory {
    */
   async handleGetOn(): Promise<CharacteristicValue> {
     try {
-      this.platform.log.debug(
-        this.loggerPrefix,
-        `Fetching the ON state at ${this.stateApiUrl}`
-      );
-
       // TODO: move to using this.service.updateCharacteristic(this.platform.Characteristic.On, true) and remove await here?
-      const response = await fetch(this.stateApiUrl);
+      const response = await this.homeWizardApi.getState();
 
-      if (!response.ok) {
-        throw new Error(
-          `Api GET call at ${this.stateApiUrl} failed, with status ${
-            response.status
-          } and response data ${JSON.stringify(response.body)}`
-        );
-      }
+      return response.power_on;
+    } catch (error) {
+      const errorMessage =
+        "A unknown error occurred while getting the ON state";
 
-      const state = (await response.json()) as HomeWizardApiStateResponse;
-
-      this.platform.log.debug(
-        this.loggerPrefix,
-        `Got response from ${this.stateApiUrl}: ${JSON.stringify(state)}`
-      );
-
-      this.platform.log.info(
-        this.loggerPrefix,
-        `Energy Socket is ${state.power_on ? "ON" : "OFF"}`
-      );
-
-      return state.power_on;
-    } catch (err) {
-      let errorMessage = "A unknown error occurred while getting the ON state";
-
-      if (err instanceof Error) {
-        errorMessage = err.message;
-      }
-
-      this.platform.log.error(this.loggerPrefix, errorMessage);
-
-      // TODO: handle scenario where the device is offline, is fetched in homekit and shows as non responsive. But then comes back online again. The status is not being updated and api keeps coming back as 403
-      //
-      throw new this.platform.api.hap.HapStatusError(
-        this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE
-      );
+      throw this.handleAccessoryApiError(error, errorMessage);
     }
+  }
+
+  handleAccessoryApiError(error: unknown, fallbackErrorMessage?: string) {
+    let errorMessage = fallbackErrorMessage || "A unknown error occurred";
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+
+    this.platform.log.error(this.loggerPrefix, errorMessage);
+
+    // TODO: handle scenario where the device is offline, is fetched in homekit and shows as non responsive. But then comes back online again. The status is not being updated and api keeps coming back as 403
+    return new this.platform.api.hap.HapStatusError(
+      this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE
+    );
   }
 }

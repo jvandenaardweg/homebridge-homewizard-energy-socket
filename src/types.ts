@@ -77,6 +77,9 @@ export interface HomeWizardApiStateResponse {
   brightness: number;
 }
 
+export type HomeWizardApiStatePutParams = Partial<HomeWizardApiStateResponse>;
+export type HomeWizardApiStatePutResponse = Partial<HomeWizardApiStateResponse>;
+
 /**
  * The /api endpoint allows you to get basic information from the device.
  *
