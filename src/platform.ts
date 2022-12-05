@@ -14,13 +14,13 @@ import { PLATFORM_NAME, PLUGIN_NAME } from "@/settings";
 import { EnergySocketAccessory } from "@/energySocketAccessory";
 import {
   EnergySocketAccessoryProperties,
-  ENERGY_SOCKET_PRODUCT_TYPE,
+  HomeWizardSupportedDeviceTypes,
   HomeWizardEnergyConfig,
   HomeWizardEnergyPlatformAccessoryContext,
   MDNS_DISCOVERY_PROTOCOL,
   MDNS_DISCOVERY_TYPE,
   TxtRecord,
-} from "@/types";
+} from "@/api/types";
 
 /**
  * HomebridgePlatform
@@ -158,7 +158,10 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
   }
 
   isDeviceProductTypeSupported(txtRecord: TxtRecord): boolean {
-    return txtRecord.product_type === ENERGY_SOCKET_PRODUCT_TYPE;
+    return (
+      txtRecord.product_type ===
+      HomeWizardSupportedDeviceTypes.WIFI_ENERGY_SOCKET
+    );
   }
 
   handleDiscoveredService(service: BonjourService): void {
@@ -178,7 +181,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     if (!this.isDeviceProductTypeSupported(txtRecord)) {
       this.log.info(
         this.loggerPrefix,
-        `Found a device that is not an Energy Socket (${ENERGY_SOCKET_PRODUCT_TYPE}), skipping`,
+        `Found a device that is not an Energy Socket (${HomeWizardSupportedDeviceTypes.WIFI_ENERGY_SOCKET}), skipping`,
         JSON.stringify(txtRecord)
       );
       return;

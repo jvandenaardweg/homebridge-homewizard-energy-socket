@@ -11,7 +11,7 @@ import {
   EnergySocketAccessoryProperties,
   HomeWizardEnergyPlatformAccessoryContext,
   PLATFORM_MANUFACTURER,
-} from "@/types";
+} from "@/api/types";
 
 /**
  * Platform Accessory

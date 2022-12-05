@@ -1,7 +1,7 @@
 import { HomebridgeAPI } from "homebridge/lib/api";
 import { HomebridgeHomeWizardEnergySocket } from "../platform";
 import { PLATFORM_NAME } from "../settings";
-import { TxtRecord } from "../types";
+import { TxtRecord } from "../api/types";
 import { loggerMock } from "./mocks/logger";
 
 jest.mock("bonjour-service");

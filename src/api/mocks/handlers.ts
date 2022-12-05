@@ -13,7 +13,7 @@ import { mockApiUrl } from "@/api/mocks/api-url";
 import {
   HomeWizardApiStatePutParams,
   HomeWizardApiStateResponse,
-} from "@/types";
+} from "@/api/types";
 
 /**
  * Little helper method so we don't have to repeat ourselves.

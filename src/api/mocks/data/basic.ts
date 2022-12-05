@@ -1,4 +1,4 @@
-import { HomeWizardApiBasicInformationResponse } from "../../../types";
+import { HomeWizardApiBasicInformationResponse } from "../../types";
 
 export const mockBasicInformationResponse: HomeWizardApiBasicInformationResponse =
   {

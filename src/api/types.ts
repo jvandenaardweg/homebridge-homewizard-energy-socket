@@ -1,7 +1,5 @@
 import { PlatformConfig } from "homebridge";
 
-export const ENERGY_SOCKET_PRODUCT_TYPE = "HWE-SKT";
-
 export const PLATFORM_MANUFACTURER = "HomeWizard";
 
 /**
@@ -13,6 +11,21 @@ export const PLATFORM_MANUFACTURER = "HomeWizard";
  */
 export const MDNS_DISCOVERY_TYPE = "hwenergy";
 export const MDNS_DISCOVERY_PROTOCOL = "tcp";
+
+/**
+ * A list of device types that HomeWizard supports.
+ *
+ * We only support the Energy Socket for now.
+ *
+ * @link https://homewizard-energy-api.readthedocs.io/getting-started.html#supported-devices
+ */
+export enum HomeWizardSupportedDeviceTypes {
+  WIFI_PI_METER = "HWE-P1",
+  WIFI_ENERGY_SOCKET = "HWE-SKT",
+  WIFI_WATER_METER = "HWE-WTR",
+  WIFI_KWH_METER_PHASE_1 = "SDM230-wifi",
+  WIFI_KWH_METER_PHASE_2 = "SDM630-wifi",
+}
 
 export interface TxtRecord {
   /** Indicates if the "Local API" is enabled. `"1"` = enabled, `"0"` = disabled */

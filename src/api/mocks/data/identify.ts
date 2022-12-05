@@ -1,4 +1,4 @@
-import { HomeWizardApiIdentifyResponse } from "../../../types";
+import { HomeWizardApiIdentifyResponse } from "../../types";
 
 export const mockIdentifyResponse: HomeWizardApiIdentifyResponse = {
   identify: "ok",
