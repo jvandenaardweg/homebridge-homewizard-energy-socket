@@ -3,6 +3,8 @@ import { HomebridgeHomeWizardEnergySocket } from "../platform";
 import { PLATFORM_NAME } from "../settings";
 import { TxtRecord } from "../types";
 
+jest.mock("bonjour-service");
+
 // mock the logger parameter
 const loggerMock = {
   info: jest.fn(),
