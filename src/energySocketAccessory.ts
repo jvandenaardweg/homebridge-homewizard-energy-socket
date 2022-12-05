@@ -1,4 +1,9 @@
-import { Service, PlatformAccessory, CharacteristicValue } from "homebridge";
+import {
+  Service,
+  PlatformAccessory,
+  CharacteristicValue,
+  PlatformAccessoryEvent,
+} from "homebridge";
 import fetch from "node-fetch";
 
 import { HomebridgeHomeWizardEnergySocket } from "./platform";
@@ -8,6 +13,7 @@ import {
   HomeWizardEnergyPlatformAccessoryContext,
   HomeWizardApiStateResponse,
   PLATFORM_MANUFACTURER,
+  HomeWizardApiIdentifyResponse,
 } from "./types";
 
 /**
@@ -20,6 +26,7 @@ export class EnergySocketAccessory {
   private energySocket: EnergySocketAccessoryProperties;
   private loggerPrefix: string;
   private stateApiUrl: string;
+  private identifyApiUrl: string;
 
   constructor(
     private readonly platform: HomebridgeHomeWizardEnergySocket,
@@ -40,6 +47,7 @@ export class EnergySocketAccessory {
     );
 
     this.stateApiUrl = `${energySocket.apiUrl}/api/v1/state`;
+    this.identifyApiUrl = `${energySocket.apiUrl}/api/v1/identify`;
 
     // Set accessory information
     this.accessory
@@ -68,11 +76,90 @@ export class EnergySocketAccessory {
     // see https://developers.homebridge.io/#/service/Outlet
     this.setAsyncRequiredCharacteristic();
 
-    // register handlers for the On/Off Characteristic
+    // Register handlers for the On/Off Characteristic
     this.service
       .getCharacteristic(this.platform.Characteristic.On)
       .onSet(this.handleSetOn.bind(this))
       .onGet(this.handleGetOn.bind(this));
+
+    // Listen for the "identify" event for this Accessory
+    this.accessory.on(
+      PlatformAccessoryEvent.IDENTIFY,
+      this.handleIdentify.bind(this)
+    );
+  }
+
+  /**
+   * This method is called when the user uses the "Identify" feature in the Home app when adding
+   * new accessories.
+   *
+   * This method should blink the status light of the Energy Socket to help the user identify it.
+   */
+  async handleIdentify(): Promise<void> {
+    const firmwareVersionString = this.accessory
+      .getService(this.platform.Service.AccessoryInformation)
+      ?.getCharacteristic(this.platform.Characteristic.FirmwareRevision).value;
+    const firmwareVersion = firmwareVersionString
+      ? Number(firmwareVersionString)
+      : null;
+
+    if (!firmwareVersion) {
+      this.platform.log.warn(
+        this.loggerPrefix,
+        "Cannot identify, firmware version is not set"
+      );
+
+      return;
+    }
+
+    // Check if firmware version is 3.00 or later, as the identify API is not available in earlier versions
+    // See: https://homewizard-energy-api.readthedocs.io/endpoints.html#identify-api-v1-identify
+    if (firmwareVersion < 3) {
+      this.platform.log.warn(
+        this.loggerPrefix,
+        "Cannot identify, this feature is only available on Energy Sockets with firmware version 3.00 or later"
+      );
+
+      return;
+    }
+
+    this.platform.log.debug(this.loggerPrefix, "Identify requested!");
+
+    try {
+      const response = await fetch(this.identifyApiUrl, {
+        method: "PUT",
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Api PUT call at ${this.identifyApiUrl} failed, with status ${
+            response.status
+          } and response data ${JSON.stringify(response)}`
+        );
+      }
+
+      const data = (await response.json()) as HomeWizardApiIdentifyResponse;
+
+      this.platform.log.debug(
+        this.loggerPrefix,
+        `Energy Socket identified: ${data.identify}`
+      );
+
+      // this.state.On = value as boolean;
+    } catch (err) {
+      let errorMessage =
+        "A unknown error occurred while identifying the Energy Socket";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      this.platform.log.debug(this.loggerPrefix, errorMessage);
+
+      throw new this.platform.api.hap.HapStatusError(
+        this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE
+      );
+    }
   }
 
   async setAsyncRequiredCharacteristic(): Promise<void> {
@@ -102,6 +189,7 @@ export class EnergySocketAccessory {
           this.platform.Characteristic.SerialNumber,
           data.serial // Like: "1c23e7280952"
         )
+        // The firmware version of the device. Some API features may not work with different firmware versions.
         .setCharacteristic(
           this.platform.Characteristic.FirmwareRevision,
           data.firmware_version // Like: "3.02"

@@ -96,6 +96,17 @@ export interface HomeWizardApiBasicInformationResponse {
   api_version: string;
 }
 
+/**
+ * The /api/v1/identify endpoint can be used to let the user identify the device. The status light will blink for a few seconds after calling this endpoint.
+ *
+ * This feature is currently only available for HWE-SKT running firmware version 3.00 or later.
+ *
+ * @link: https://homewizard-energy-api.readthedocs.io/endpoints.html#identify-api-v1-identify
+ */
+export interface HomeWizardApiIdentifyResponse {
+  identify: "ok";
+}
+
 export interface HomeWizardEnergyPlatformAccessoryContext {
   energySocket: EnergySocketAccessoryProperties;
 }
