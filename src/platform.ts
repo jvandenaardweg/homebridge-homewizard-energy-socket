@@ -32,8 +32,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
   public readonly Characteristic: typeof Characteristic =
     this.api.hap.Characteristic;
 
-  // this is used to track restored cached accessories
-  public readonly accessories: PlatformAccessory[] = [];
+  public readonly cachedAccessories: PlatformAccessory[] = [];
 
   private config: HomeWizardEnergyConfig;
 
@@ -60,11 +59,6 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
       "Finished initializing platform:",
       config.name
     );
-
-    // this.log.debug(this.loggerPrefix,
-    //   "Using socket IPs",
-    //   this.config.sockets.map((s) => s.ip).join(", ")
-    // );
 
     // When this event is fired it means Homebridge has restored all cached accessories from disk.
     // Dynamic Platform plugins should only register new accessories after this event was fired,
@@ -101,7 +95,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     );
 
     // add the restored accessory to the accessories cache so we can track if it has already been registered
-    this.accessories.push(accessory);
+    this.cachedAccessories.push(accessory);
   }
 
   /**
@@ -197,7 +191,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     const energySocketProperties =
       this.getEnergySocketPropertiesFromService(service);
 
-    const existingAccessory = this.accessories.find(
+    const existingAccessory = this.cachedAccessories.find(
       (accessory) => accessory.UUID === energySocketProperties.uuid
     ) as PlatformAccessory<HomeWizardEnergyPlatformAccessoryContext>;
 

@@ -25,7 +25,8 @@
     "update": "npx npm-check-updates --interactive",
     "test": "jest",
     "test:watch": "jest --watch",
-    "release": "dotenv npx release-it"
+    "release": "dotenv npx release-it",
+    "type-check": "tsc --noEmit"
   },
   "keywords": [
     "homebridge-plugin",
