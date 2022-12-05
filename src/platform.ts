@@ -190,6 +190,8 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
       return;
     }
 
+    // TODO: Skip if "Switch lock" setting is on
+
     // Service is an Energy Socket, and the Local API is enabled, so we can use it
 
     const energySocketProperties =
