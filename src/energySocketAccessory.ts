@@ -23,20 +23,21 @@ import {
  */
 export class EnergySocketAccessory {
   private service: Service;
-  private energySocket: EnergySocketAccessoryProperties;
+  private properties: EnergySocketAccessoryProperties;
   private loggerPrefix: string;
   private stateApiUrl: string;
   private identifyApiUrl: string;
+  private baseApiUrl: string;
 
   constructor(
     private readonly platform: HomebridgeHomeWizardEnergySocket,
     private readonly accessory: PlatformAccessory<HomeWizardEnergyPlatformAccessoryContext>
   ) {
-    const energySocket = accessory.context.energySocket;
+    const properties = accessory.context.energySocket;
 
-    this.energySocket = energySocket;
+    this.properties = properties;
 
-    this.loggerPrefix = `${energySocket.hostname} (${energySocket.serialNumber}) -> `;
+    this.loggerPrefix = `${properties.hostname} (${properties.serialNumber}) -> `;
 
     this.platform.log.debug(
       this.loggerPrefix,
@@ -46,8 +47,9 @@ export class EnergySocketAccessory {
       accessory.context.energySocket
     );
 
-    this.stateApiUrl = `${energySocket.apiUrl}/api/v1/state`;
-    this.identifyApiUrl = `${energySocket.apiUrl}/api/v1/identify`;
+    this.baseApiUrl = `${properties.apiUrl}/api`;
+    this.stateApiUrl = `${properties.apiUrl}/api/v1/state`;
+    this.identifyApiUrl = `${properties.apiUrl}/api/v1/identify`;
 
     // Set accessory information
     this.accessory
@@ -154,7 +156,7 @@ export class EnergySocketAccessory {
         errorMessage = err.message;
       }
 
-      this.platform.log.debug(this.loggerPrefix, errorMessage);
+      this.platform.log.error(this.loggerPrefix, errorMessage);
 
       throw new this.platform.api.hap.HapStatusError(
         this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE
@@ -164,11 +166,12 @@ export class EnergySocketAccessory {
 
   async setAsyncRequiredCharacteristic(): Promise<void> {
     try {
-      const apiUrl = `${this.energySocket.apiUrl}/api`;
+      this.platform.log.debug(
+        this.loggerPrefix,
+        `Fetching ${this.baseApiUrl}...`
+      );
 
-      this.platform.log.debug(this.loggerPrefix, `Fetching ${apiUrl}...`);
-
-      const result = await fetch(apiUrl);
+      const result = await fetch(this.baseApiUrl);
 
       const data =
         (await result.json()) as HomeWizardApiBasicInformationResponse;
@@ -248,7 +251,7 @@ export class EnergySocketAccessory {
         errorMessage = err.message;
       }
 
-      this.platform.log.debug(this.loggerPrefix, errorMessage);
+      this.platform.log.error(this.loggerPrefix, errorMessage);
 
       throw new this.platform.api.hap.HapStatusError(
         this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE
@@ -307,7 +310,7 @@ export class EnergySocketAccessory {
         errorMessage = err.message;
       }
 
-      this.platform.log.debug(this.loggerPrefix, errorMessage);
+      this.platform.log.error(this.loggerPrefix, errorMessage);
 
       // TODO: handle scenario where the device is offline, is fetched in homekit and shows as non responsive. But then comes back online again. The status is not being updated and api keeps coming back as 403
       //
