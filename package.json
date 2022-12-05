@@ -41,7 +41,7 @@
     "apple home"
   ],
   "devDependencies": {
-    "@types/jest": "^29.2.3",
+    "@types/jest": "^29.2.4",
     "@types/node": "^18.11.10",
     "@types/node-fetch": "^2.6.2",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
