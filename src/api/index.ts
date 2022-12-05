@@ -2,6 +2,7 @@ import { Logger } from "homebridge";
 import fetch, { Response } from "node-fetch";
 import {
   HomeWizardApiBasicInformationResponse,
+  HomeWizardApiErrorResponse,
   HomeWizardApiIdentifyResponse,
   HomeWizardApiStatePutParams,
   HomeWizardApiStatePutResponse,
@@ -35,13 +36,15 @@ export class HomeWizardApi {
     };
   }
 
-  throwApiError(method: string, response: Response): never {
+  async throwApiError(method: string, response: Response): Promise<never> {
+    const responseData = await response.json();
+
     throw new Error(
       `Api ${method.toUpperCase()} call at ${
         response.url
       } failed, with status ${
         response.status
-      } and response data ${JSON.stringify(response)}`
+      } and response data ${JSON.stringify(responseData)}`
     );
   }
 
@@ -70,7 +73,7 @@ export class HomeWizardApi {
     }
 
     const data =
-      response.json() as unknown as HomeWizardApiBasicInformationResponse;
+      (await response.json()) as unknown as HomeWizardApiBasicInformationResponse;
 
     this.log.debug(
       this.loggerPrefix,
@@ -100,7 +103,8 @@ export class HomeWizardApi {
       return this.throwApiError(method, response);
     }
 
-    const data = response.json() as unknown as HomeWizardApiStateResponse;
+    const data =
+      (await response.json()) as unknown as HomeWizardApiStateResponse;
 
     this.log.info(
       this.loggerPrefix,
@@ -135,7 +139,8 @@ export class HomeWizardApi {
       return this.throwApiError(method, response);
     }
 
-    const data = response.json() as unknown as HomeWizardApiStatePutResponse;
+    const data =
+      (await response.json()) as unknown as HomeWizardApiStatePutResponse;
 
     this.log.debug(
       this.loggerPrefix,
@@ -181,7 +186,8 @@ export class HomeWizardApi {
       return this.throwApiError(method, response);
     }
 
-    const data = response.json() as unknown as HomeWizardApiIdentifyResponse;
+    const data =
+      (await response.json()) as unknown as HomeWizardApiIdentifyResponse;
 
     this.log.debug(
       this.loggerPrefix,
