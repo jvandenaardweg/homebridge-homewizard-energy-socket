@@ -44,7 +44,7 @@
   ],
   "devDependencies": {
     "@types/node": "^18.11.10",
-    "@types/node-fetch": "^2.6.2",
+    "@types/node-fetch": "^3.0.2",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
     "@typescript-eslint/parser": "^5.45.0",
     "dotenv-cli": "^6.0.0",
