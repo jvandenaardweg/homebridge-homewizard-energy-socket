@@ -10,8 +10,8 @@ import {
 } from "homebridge";
 import Bonjour, { Service as BonjourService } from "bonjour-service";
 
-import { PLATFORM_NAME, PLUGIN_NAME } from "./settings";
-import { EnergySocketAccessory } from "./energySocketAccessory";
+import { PLATFORM_NAME, PLUGIN_NAME } from "@/settings";
+import { EnergySocketAccessory } from "@/energySocketAccessory";
 import {
   EnergySocketAccessoryProperties,
   ENERGY_SOCKET_PRODUCT_TYPE,
@@ -20,7 +20,7 @@ import {
   MDNS_DISCOVERY_PROTOCOL,
   MDNS_DISCOVERY_TYPE,
   TxtRecord,
-} from "./types";
+} from "@/types";
 
 /**
  * HomebridgePlatform

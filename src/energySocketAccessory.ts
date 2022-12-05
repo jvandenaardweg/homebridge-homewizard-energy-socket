@@ -4,14 +4,14 @@ import {
   CharacteristicValue,
   PlatformAccessoryEvent,
 } from "homebridge";
-import { HomeWizardApi } from "./api";
+import { HomeWizardApi } from "@/api";
 
-import { HomebridgeHomeWizardEnergySocket } from "./platform";
+import { HomebridgeHomeWizardEnergySocket } from "@/platform";
 import {
   EnergySocketAccessoryProperties,
   HomeWizardEnergyPlatformAccessoryContext,
   PLATFORM_MANUFACTURER,
-} from "./types";
+} from "@/types";
 
 /**
  * Platform Accessory

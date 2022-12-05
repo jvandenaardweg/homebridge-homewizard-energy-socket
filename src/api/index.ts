@@ -6,7 +6,7 @@ import {
   HomeWizardApiStatePutParams,
   HomeWizardApiStatePutResponse,
   HomeWizardApiStateResponse,
-} from "../types";
+} from "@/types";
 
 interface Endpoints {
   basic: string;

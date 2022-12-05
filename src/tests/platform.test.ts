@@ -2,17 +2,9 @@ import { HomebridgeAPI } from "homebridge/lib/api";
 import { HomebridgeHomeWizardEnergySocket } from "../platform";
 import { PLATFORM_NAME } from "../settings";
 import { TxtRecord } from "../types";
+import { loggerMock } from "./mocks/logger";
 
 jest.mock("bonjour-service");
-
-// mock the logger parameter
-const loggerMock = {
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
-  log: jest.fn(),
-};
 
 // mock the config parameter
 const configMock = {
