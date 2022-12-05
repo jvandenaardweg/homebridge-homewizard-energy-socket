@@ -2,8 +2,8 @@
 <img src="https://github.com/homebridge/branding/raw/master/logos/homebridge-wordmark-logo-vertical.png" width="150">
 </p>
 <p align="center">
-<a href="https://badge.fury.io/js/sort-by-property"><img src="https://badge.fury.io/js/homebridge-homewizard-energy-socket.svg" alt="npm version" /></a>
-<a href="https://github.com/jvandenaardweg/sort-by-property/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="mit license" /></a>
+<a href="https://badge.fury.io/js/homebridge-homewizard-energy-socket"><img src="https://badge.fury.io/js/homebridge-homewizard-energy-socket.svg" alt="npm version" /></a>
+<a href="https://github.com/jvandenaardweg/homebridge-homewizard-energy-socket/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="mit license" /></a>
 </p>
 
 # Homebridge plugin for HomeWizard Energy Socket
