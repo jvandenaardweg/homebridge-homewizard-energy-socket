@@ -1,6 +1,7 @@
 {
   "displayName": "Homebridge HomeWizard Energy Socket",
   "name": "homebridge-homewizard-energy-socket",
+  "type": "module",
   "version": "1.0.9",
   "description": "This Homebridge plugin exposes your HomeWizard Energy Sockets to Apple HomeKit. So you can use the Home App to switch your Energy Sockets on or off and integrate the Energy Sockets into your Home Automations.",
   "license": "MIT",
@@ -16,6 +17,7 @@
     "homebridge": ">=1.3.5"
   },
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "lint": "eslint src/**.ts --max-warnings=0",
     "watch": "npm run build && npm link && nodemon",
@@ -23,8 +25,8 @@
     "prepublishOnly": "npm run lint && npm run build",
     "homebridge": "homebridge -D",
     "update": "npx npm-check-updates --interactive",
-    "test": "jest",
-    "test:watch": "jest --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "release": "dotenv npx release-it",
     "type-check": "tsc --noEmit",
     "prepare": "is-ci || husky install",
@@ -61,11 +63,12 @@
     "rimraf": "^3.0.2",
     "ts-jest": "^29.0.3",
     "ts-node": "^10.9.1",
-    "typescript": "^4.9.3"
+    "typescript": "^4.9.3",
+    "vitest": "^0.25.3"
   },
   "dependencies": {
     "bonjour-service": "^1.0.14",
-    "node-fetch": "^2.6.7"
+    "node-fetch": "^3.1.0"
   },
   "release-it": {
     "git": {

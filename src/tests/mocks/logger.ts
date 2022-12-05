@@ -1,9 +1,10 @@
 import { Logger } from "homebridge";
+import { vi } from "vitest";
 
 export const loggerMock = {
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
-  log: jest.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  debug: vi.fn(),
+  log: vi.fn(),
 } satisfies Logger;

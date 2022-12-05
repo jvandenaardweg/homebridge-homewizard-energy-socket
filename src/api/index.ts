@@ -2,7 +2,6 @@ import { Logger } from "homebridge";
 import fetch, { Response } from "node-fetch";
 import {
   HomeWizardApiBasicInformationResponse,
-  HomeWizardApiErrorResponse,
   HomeWizardApiIdentifyResponse,
   HomeWizardApiStatePutParams,
   HomeWizardApiStatePutResponse,

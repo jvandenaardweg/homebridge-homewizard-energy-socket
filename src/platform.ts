@@ -8,7 +8,7 @@ import {
   Characteristic,
   APIEvent,
 } from "homebridge";
-import Bonjour, { Service as BonjourService } from "bonjour-service";
+import { Bonjour, Service as BonjourService } from "bonjour-service";
 
 import { PLATFORM_NAME, PLUGIN_NAME } from "@/settings";
 import { EnergySocketAccessory } from "@/energySocketAccessory";
