@@ -70,7 +70,7 @@ export class EnergySocketAccessory {
     this.service
       .setCharacteristic(
         this.platform.Characteristic.Name,
-        accessory.context.energySocket.name
+        accessory.context.energySocket.displayName
       )
       .setCharacteristic(this.platform.Characteristic.OutletInUse, true);
 

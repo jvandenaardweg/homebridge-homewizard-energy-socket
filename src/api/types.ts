@@ -61,7 +61,7 @@ export interface EnergySocketAccessoryProperties {
   serialNumber: string;
   /** The product name of this device. Example: `"Energy Socket"` */
   name: string;
-  /** The `name` with the `serialNumber` included, like: `"Energy Socket (3c12e7659852)"` */
+  /** The `name` with the `serialNumber` included, like: `"Energy Socket 3c12e7659852"` */
   displayName: string;
   /** A device type identifier. Example: `"HWE-SKT"` */
   type: string;
