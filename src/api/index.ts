@@ -1,5 +1,4 @@
 import { Logger } from "homebridge";
-import nodeFetch, { Response } from "node-fetch";
 import {
   HomeWizardApiBasicInformationResponse,
   HomeWizardApiIdentifyResponse,
@@ -7,6 +6,7 @@ import {
   HomeWizardApiStatePutResponse,
   HomeWizardApiStateResponse,
 } from "@/api/types";
+import { httpRequest, HttpRequestResponse } from "@/http-request";
 
 interface Endpoints {
   basic: string;
@@ -35,15 +35,16 @@ export class HomeWizardApi {
     };
   }
 
-  async throwApiError(method: string, response: Response): Promise<never> {
-    const responseData = await response.json();
-
+  async throwApiError<T>(
+    method: string,
+    response: HttpRequestResponse<T>
+  ): Promise<never> {
     throw new Error(
       `Api ${method.toUpperCase()} call at ${
         response.url
       } failed, with status ${
         response.status
-      } and response data ${JSON.stringify(responseData)}`
+      } and response data ${JSON.stringify(response)}`
     );
   }
 
@@ -63,16 +64,18 @@ export class HomeWizardApi {
     );
 
     const method = "GET";
-    const response = await nodeFetch(this.endpoints.basic, {
-      method,
-    });
+    const response = await httpRequest<HomeWizardApiBasicInformationResponse>(
+      this.endpoints.basic,
+      {
+        method,
+      }
+    );
 
     if (!response.ok) {
       return this.throwApiError(method, response);
     }
 
-    const data =
-      (await response.json()) as unknown as HomeWizardApiBasicInformationResponse;
+    const data = response.data;
 
     this.log.debug(
       this.loggerPrefix,
@@ -94,16 +97,18 @@ export class HomeWizardApi {
     );
 
     const method = "GET";
-    const response = await nodeFetch(this.endpoints.state, {
-      method,
-    });
+    const response = await httpRequest<HomeWizardApiStateResponse>(
+      this.endpoints.state,
+      {
+        method,
+      }
+    );
 
     if (!response.ok) {
       return this.throwApiError(method, response);
     }
 
-    const data =
-      (await response.json()) as unknown as HomeWizardApiStateResponse;
+    const data = response.data;
 
     this.log.info(
       this.loggerPrefix,
@@ -129,17 +134,19 @@ export class HomeWizardApi {
     );
 
     const method = "PUT";
-    const response = await nodeFetch(this.endpoints.state, {
-      method,
-      body: JSON.stringify(params),
-    });
+    const response = await httpRequest<HomeWizardApiStatePutResponse>(
+      this.endpoints.state,
+      {
+        method,
+        data: params,
+      }
+    );
 
     if (!response.ok) {
       return this.throwApiError(method, response);
     }
 
-    const data =
-      (await response.json()) as unknown as HomeWizardApiStatePutResponse;
+    const data = response.data;
 
     this.log.debug(
       this.loggerPrefix,
@@ -177,16 +184,18 @@ export class HomeWizardApi {
 
     const method = "PUT";
 
-    const response = await nodeFetch(this.endpoints.identify, {
-      method,
-    });
+    const response = await httpRequest<HomeWizardApiIdentifyResponse>(
+      this.endpoints.identify,
+      {
+        method,
+      }
+    );
 
     if (!response.ok) {
       return this.throwApiError(method, response);
     }
 
-    const data =
-      (await response.json()) as unknown as HomeWizardApiIdentifyResponse;
+    const data = response.data;
 
     this.log.debug(
       this.loggerPrefix,
