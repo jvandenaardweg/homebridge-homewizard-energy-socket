@@ -6,7 +6,7 @@ import {
   HomeWizardApiStatePutResponse,
   HomeWizardApiStateResponse,
 } from "@/api/types";
-import { httpRequest, HttpRequestResponse } from "@/http-request";
+import { httpRequest, HttpRequestResponse } from "@/utils/http-request";
 
 interface Endpoints {
   basic: string;
@@ -75,7 +75,7 @@ export class HomeWizardApi {
       return this.throwApiError(method, response);
     }
 
-    const data = response.data;
+    const data = await response.json();
 
     this.log.debug(
       this.loggerPrefix,
@@ -108,7 +108,7 @@ export class HomeWizardApi {
       return this.throwApiError(method, response);
     }
 
-    const data = response.data;
+    const data = await response.json();
 
     this.log.info(
       this.loggerPrefix,
@@ -138,7 +138,7 @@ export class HomeWizardApi {
       this.endpoints.state,
       {
         method,
-        data: params,
+        body: JSON.stringify(params),
       }
     );
 
@@ -146,7 +146,7 @@ export class HomeWizardApi {
       return this.throwApiError(method, response);
     }
 
-    const data = response.data;
+    const data = await response.json();
 
     this.log.debug(
       this.loggerPrefix,
@@ -195,7 +195,7 @@ export class HomeWizardApi {
       return this.throwApiError(method, response);
     }
 
-    const data = response.data;
+    const data = await response.json();
 
     this.log.debug(
       this.loggerPrefix,
