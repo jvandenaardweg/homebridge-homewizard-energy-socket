@@ -7,19 +7,29 @@ export interface HttpRequestResponse<T> {
   readonly status: number;
   readonly statusText: string | undefined;
   readonly url: string;
-  readonly data: T;
+  readonly body: string;
+  json(): Promise<T>;
 }
 
 type HttpRequestOptions = Omit<
   RequestOptions,
   "protocol" | "host" | "path" | "port" | "hostname" | "localAddress" | "href"
 > & {
-  data?: object;
+  body?: string;
 };
 
+/**
+ * A little type-safe `http` / `https` wrapper, similar to `fetch`. So we can replace it with a fetch implementation later on when needed.
+ *
+ * Why?
+ *
+ * There seems to be a bug in node-fetch on Node 18, which makes `response.json()` not work on our PUT requests.
+ *
+ * For now, this `httpRequest` method will do, so we don't have to import any dependencies.
+ */
 export const httpRequest = <T>(
   url: string,
-  options: HttpRequestOptions
+  options?: HttpRequestOptions
 ): Promise<HttpRequestResponse<T>> =>
   new Promise((resolve, reject) => {
     let request = http.request;
@@ -38,7 +48,7 @@ export const httpRequest = <T>(
         port,
         headers: {
           "Content-Type": "application/json",
-          ...options.headers,
+          ...options?.headers,
         },
         ...options,
       },
@@ -62,16 +72,28 @@ export const httpRequest = <T>(
             );
           }
 
-          const ok = !!(statusCode && statusCode < 400);
+          const ok = !!(statusCode >= 200 && statusCode < 300);
 
-          const data = JSON.parse(joinedBody) as T;
+          // fetch-like json method
+          const json = async (): Promise<T> => {
+            return new Promise((resolve, reject) => {
+              try {
+                const json = JSON.parse(joinedBody) as T;
+
+                resolve(json);
+              } catch (err) {
+                reject(err);
+              }
+            });
+          };
 
           const response: HttpRequestResponse<T> = {
             ok,
             headers,
-            data,
+            json,
             status: statusCode,
             statusText,
+            body: joinedBody,
             url,
           };
 
@@ -82,8 +104,8 @@ export const httpRequest = <T>(
 
     req.on("error", reject);
 
-    if (options.data) {
-      req.write(JSON.stringify(options.data));
+    if (options?.body) {
+      req.write(options.body);
     }
 
     req.end();
