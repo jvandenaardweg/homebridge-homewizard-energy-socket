@@ -200,15 +200,15 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
 
     if (!existingAccessory) {
       // The accessory does not yet exist, so we need to create it
-      const displayName = `${energySocketProperties.name} ${energySocketProperties.serialNumber}`; // Energy Socket (3c12e7659852)
-      const uuid = energySocketProperties.uuid;
+
+      const { uuid, displayName, apiUrl } = energySocketProperties;
 
       this.log.info(
         this.loggerPrefix,
         "Adding new accessory:",
         displayName,
-        energySocketProperties.apiUrl,
-        energySocketProperties.uuid
+        apiUrl,
+        uuid
       );
 
       // Create a new accessory
@@ -278,7 +278,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     const type = txtRecord.product_type;
     const ip = service.addresses?.[0] as string; // get the first address
     const port = service.port; // 80
-    const displayName = `${name} ${serialNumber}`; // Energy Socket (3c12e7659852)
+    const displayName = `${name} ${serialNumber}`; // "Energy Socket 3c12e7659852", which is used as the name in HomeKit
 
     // generate a unique id for the accessory this should be generated from
     // something globally unique, but constant, for example, the device serial
