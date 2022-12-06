@@ -165,7 +165,7 @@ export class EnergySocketAccessory {
         );
 
         throw new this.platform.api.hap.HapStatusError(
-          this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE
+          this.platform.api.hap.HAPStatus.NOT_ALLOWED_IN_CURRENT_STATE
         );
       }
 
