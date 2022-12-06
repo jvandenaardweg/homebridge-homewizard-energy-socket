@@ -38,74 +38,76 @@ export const httpRequest = <T>(
       request = https.request;
     }
 
+    const { body } = options || {};
+
     const { host, pathname, protocol, port } = new URL(url);
 
-    const req = request(
-      {
-        protocol,
-        host,
-        path: pathname,
-        port,
-        headers: {
-          "Content-Type": "application/json",
-          ...options?.headers,
-        },
-        ...options,
+    const requestOptions = {
+      protocol,
+      host,
+      path: pathname,
+      port: port || 80,
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Length": body?.length || 0,
+        ...options?.headers,
       },
-      (res) => {
-        const body = new Array<Buffer | string>();
-        const statusText = res.statusMessage;
+      ...options,
+    } satisfies RequestOptions;
 
-        res.setEncoding("utf8");
+    console.log(url, requestOptions);
 
-        res.on("data", (chunk) => body.push(chunk));
-        res.on("error", reject);
-        res.on("end", () => {
-          const { statusCode, headers } = res;
-          const joinedBody = body.join("");
+    const req = request(requestOptions, (res) => {
+      const body = new Array<Buffer | string>();
+      const statusText = res.statusMessage;
 
-          if (!statusCode) {
-            return reject(
-              new Error(
-                `Request failed. No status code returned. Response body: ${joinedBody}`
-              )
-            );
-          }
+      res.on("data", (chunk) => body.push(chunk));
+      res.on("error", reject);
+      res.on("end", () => {
+        const { statusCode, headers } = res;
+        const joinedBody = body.join("");
 
-          const ok = !!(statusCode >= 200 && statusCode < 300);
+        if (!statusCode) {
+          return reject(
+            new Error(
+              `Request failed. No status code returned. Response body: ${joinedBody}`
+            )
+          );
+        }
 
-          // fetch-like json method
-          const json = async (): Promise<T> => {
-            return new Promise((resolve, reject) => {
-              try {
-                const json = JSON.parse(joinedBody) as T;
+        const ok = !!(statusCode >= 200 && statusCode < 300);
 
-                resolve(json);
-              } catch (err) {
-                reject(err);
-              }
-            });
-          };
+        // fetch-like json method
+        const json = async (): Promise<T> => {
+          return new Promise((resolve, reject) => {
+            try {
+              const json = JSON.parse(joinedBody) as T;
 
-          const response: HttpRequestResponse<T> = {
-            ok,
-            headers,
-            json,
-            status: statusCode,
-            statusText,
-            body: joinedBody,
-            url,
-          };
+              resolve(json);
+            } catch (err) {
+              reject(err);
+            }
+          });
+        };
 
-          return resolve(response);
-        });
-      }
-    );
+        const response: HttpRequestResponse<T> = {
+          ok,
+          headers,
+          json,
+          status: statusCode,
+          statusText,
+          body: joinedBody,
+          url,
+        };
+
+        return resolve(response);
+      });
+    });
 
     req.on("error", reject);
 
-    if (options?.body) {
-      req.write(options.body);
+    if (body) {
+      req.write(body);
     }
 
     req.end();

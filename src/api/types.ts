@@ -143,6 +143,7 @@ export interface HomeWizardApiErrorResponse {
  */
 export enum ErrorCodes {
   BODY_CONTAINS_INVALID_JSON = 2,
+  NO_DATA_IN_BODY = 5, // undocumented but received it
   INVALID_VALUE_FOR_PARAMETER = 7,
   PARAMETER_IS_NOT_MODIFIABLE = 8,
   REQUEST_TO_LONG = 201,
