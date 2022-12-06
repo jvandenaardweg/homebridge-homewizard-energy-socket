@@ -9,6 +9,7 @@ import { HomeWizardApi } from "@/api";
 import { HomebridgeHomeWizardEnergySocket } from "@/platform";
 import {
   EnergySocketAccessoryProperties,
+  HomeWizardApiStateResponse,
   HomeWizardEnergyPlatformAccessoryContext,
   PLATFORM_MANUFACTURER,
 } from "@/api/types";
@@ -23,6 +24,7 @@ export class EnergySocketAccessory {
   private properties: EnergySocketAccessoryProperties;
   private loggerPrefix: string;
   private homeWizardApi: HomeWizardApi;
+  private localStateResponse: HomeWizardApiStateResponse | undefined;
 
   constructor(
     private readonly platform: HomebridgeHomeWizardEnergySocket,
@@ -154,6 +156,19 @@ export class EnergySocketAccessory {
    */
   async handleSetOn(value: CharacteristicValue): Promise<void> {
     try {
+      // If the switch_lock setting is true, we cannot enable the Energy Socket through the API
+      // The user first has to enable the Switch Lock in the HomeWizard Energy app
+      if (this.localStateResponse?.switch_lock === true) {
+        this.platform.log.warn(
+          this.loggerPrefix,
+          `This Energy Socket (${this.accessory.context.energySocket.serialNumber}) is locked. Please enable the "Switch lock" setting in the HomeWizard Energy app for this Energy Socket.`
+        );
+
+        throw new this.platform.api.hap.HapStatusError(
+          this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE
+        );
+      }
+
       await this.homeWizardApi.putState({
         power_on: value as boolean,
       });
@@ -182,6 +197,10 @@ export class EnergySocketAccessory {
     try {
       // TODO: move to using this.service.updateCharacteristic(this.platform.Characteristic.On, true) and remove await here?
       const response = await this.homeWizardApi.getState();
+
+      // Put it in the local state, so we can keep track of the switch_lock setting, this must be enabled
+      // If not, we can show a warning in the log
+      this.localStateResponse = response;
 
       return response.power_on;
     } catch (error) {
