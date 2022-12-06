@@ -55,8 +55,6 @@ export const httpRequest = <T>(
       ...options,
     } satisfies RequestOptions;
 
-    console.log(url, requestOptions);
-
     const req = request(requestOptions, (res) => {
       const body = new Array<Buffer | string>();
       const statusText = res.statusMessage;
