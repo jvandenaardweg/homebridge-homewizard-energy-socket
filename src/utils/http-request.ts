@@ -1,5 +1,5 @@
-import https from "https";
-import http, { RequestOptions, IncomingHttpHeaders } from "http";
+import https from 'https';
+import http, { RequestOptions, IncomingHttpHeaders } from 'http';
 
 export interface HttpRequestResponse<T> {
   readonly headers: IncomingHttpHeaders;
@@ -13,7 +13,7 @@ export interface HttpRequestResponse<T> {
 
 type HttpRequestOptions = Omit<
   RequestOptions,
-  "protocol" | "host" | "path" | "port" | "hostname" | "localAddress" | "href"
+  'protocol' | 'host' | 'path' | 'port' | 'hostname' | 'localAddress' | 'href'
 > & {
   body?: string;
 };
@@ -29,12 +29,12 @@ type HttpRequestOptions = Omit<
  */
 export const httpRequest = <T>(
   url: string,
-  options?: HttpRequestOptions
+  options?: HttpRequestOptions,
 ): Promise<HttpRequestResponse<T>> =>
   new Promise((resolve, reject) => {
     let request = http.request;
 
-    if (url.startsWith("https")) {
+    if (url.startsWith('https')) {
       request = https.request;
     }
 
@@ -48,28 +48,26 @@ export const httpRequest = <T>(
       path: pathname,
       port: port || 80,
       headers: {
-        "Content-Type": "application/json",
-        "Content-Length": body?.length || 0,
+        'Content-Type': 'application/json',
+        'Content-Length': body?.length || 0,
         ...options?.headers,
       },
       ...options,
     } satisfies RequestOptions;
 
-    const req = request(requestOptions, (res) => {
+    const req = request(requestOptions, res => {
       const body = new Array<Buffer | string>();
       const statusText = res.statusMessage;
 
-      res.on("data", (chunk) => body.push(chunk));
-      res.on("error", reject);
-      res.on("end", () => {
+      res.on('data', chunk => body.push(chunk));
+      res.on('error', reject);
+      res.on('end', () => {
         const { statusCode, headers } = res;
-        const joinedBody = body.join("");
+        const joinedBody = body.join('');
 
         if (!statusCode) {
           return reject(
-            new Error(
-              `Request failed. No status code returned. Response body: ${joinedBody}`
-            )
+            new Error(`Request failed. No status code returned. Response body: ${joinedBody}`),
           );
         }
 
@@ -102,7 +100,7 @@ export const httpRequest = <T>(
       });
     });
 
-    req.on("error", reject);
+    req.on('error', reject);
 
     if (body) {
       req.write(body);
