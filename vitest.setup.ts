@@ -1,20 +1,15 @@
-import { server } from "src/api/mocks/server";
-import { vi } from "vitest";
+import { mockAgent } from './src/api/mocks/index';
+import { setGlobalDispatcher } from 'undici';
+import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 
 beforeAll(() => {
-  // Establish API mocking before all tests.
-  server.listen();
+  setGlobalDispatcher(mockAgent);
 });
 
 afterEach(() => {
-  // Reset any MSW request handlers that we may add during the tests,
-  // so they don't affect other tests.
-  server.resetHandlers();
-
   vi.clearAllMocks();
 });
 
-afterAll(() => {
-  // Clean up after the tests are finished.
-  server.close();
+afterAll(async () => {
+  await mockAgent.close();
 });

@@ -6,7 +6,9 @@ import {
   HomeWizardApiStatePutResponse,
   HomeWizardApiStateResponse,
 } from '@/api/types';
-import { httpRequest, HttpRequestResponse } from '@/utils/http-request';
+import { fetch, Response } from 'undici';
+
+// globalThis.fetch = fetch;
 
 export class HomeWizardApiError extends Error {
   constructor(message: string) {
@@ -22,57 +24,33 @@ export class HomeWizardApiError extends Error {
  */
 export class HomeWizardApi {
   private readonly log: Logger;
-  public ip: string;
-  public readonly port: number;
-  public readonly path: string;
-  public readonly hostname: string;
-  public readonly serialNumber: string;
+  private readonly url: string;
+  private readonly path: string;
+  private readonly serialNumber: string;
 
-  constructor(
-    ip: string,
-    port: number,
-    path: string,
-    hostname: string,
-    serialNumber: string,
-    logger: Logger,
-  ) {
+  constructor(url: string, path: string, serialNumber: string, logger: Logger) {
     this.log = logger;
 
-    this.ip = ip;
-    this.port = port;
+    this.url = url;
     this.path = path;
-    this.hostname = hostname;
     this.serialNumber = serialNumber;
   }
 
   get endpoints() {
-    const { ip, port, path } = this;
-
-    // Little hacky, but how else can we satisfy msw? 🤷‍♂️
-    const host = process.env.NODE_ENV === 'test' ? 'localhost' : ip;
+    const { url, path } = this;
 
     return {
-      basic: `http://${host}:${port}/api`,
-      state: `http://${host}:${port}${path}/state`,
-      identify: `http://${host}:${port}${path}/identify`,
+      basic: `${url}/api`,
+      state: `${url}${path}/state`,
+      identify: `${url}${path}/identify`,
     };
   }
 
   get loggerPrefix(): string {
-    return `[Api] -> ${this.hostname} (${this.serialNumber}) (${this.ip}) -> `;
+    return `[Api] -> ${this.url} (${this.serialNumber}) -> `;
   }
 
-  /**
-   * Updates the IP address of the HomeWizard Energy device.
-   * Useful when the IP address changed within the network if the user does not use fixed IP addresses.
-   */
-  public updateIpAddress(newIp: string) {
-    this.log.debug(this.loggerPrefix, `Updated IP address from ${this.ip} to ${newIp}`);
-
-    this.ip = newIp;
-  }
-
-  async throwApiError<T>(method: string, response: HttpRequestResponse<T>): Promise<never> {
+  async throwApiError(method: string, response: Response): Promise<never> {
     throw new HomeWizardApiError(
       `Api ${method.toUpperCase()} call at ${response.url} failed, with status ${
         response.status
@@ -93,18 +71,15 @@ export class HomeWizardApi {
     this.log.debug(this.loggerPrefix, `Fetching the basic information at ${this.endpoints.basic}`);
 
     const method = 'GET';
-    const response = await httpRequest<HomeWizardApiBasicInformationResponse>(
-      this.endpoints.basic,
-      {
-        method,
-      },
-    );
+    const response = await fetch(this.endpoints.basic, {
+      method,
+    });
 
     if (!response.ok) {
       return this.throwApiError(method, response);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as HomeWizardApiBasicInformationResponse;
 
     this.log.debug(this.loggerPrefix, `Fetched basic information: ${JSON.stringify(data)}`);
 
@@ -120,7 +95,7 @@ export class HomeWizardApi {
     this.log.debug(this.loggerPrefix, `Fetching the state at ${this.endpoints.state}`);
 
     const method = 'GET';
-    const response = await httpRequest<HomeWizardApiStateResponse>(this.endpoints.state, {
+    const response = await fetch(this.endpoints.state, {
       method,
     });
 
@@ -128,7 +103,7 @@ export class HomeWizardApi {
       return this.throwApiError(method, response);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as HomeWizardApiStateResponse;
 
     this.log.info(this.loggerPrefix, `Energy Socket state is ${data.power_on ? 'ON' : 'OFF'}`);
 
@@ -147,7 +122,7 @@ export class HomeWizardApi {
     );
 
     const method = 'PUT';
-    const response = await httpRequest<HomeWizardApiStatePutResponse>(this.endpoints.state, {
+    const response = await fetch(this.endpoints.state, {
       method,
       body: JSON.stringify(params),
     });
@@ -156,7 +131,7 @@ export class HomeWizardApi {
       return this.throwApiError(method, response);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as HomeWizardApiStatePutResponse;
 
     this.log.debug(
       this.loggerPrefix,
@@ -191,7 +166,7 @@ export class HomeWizardApi {
 
     const method = 'PUT';
 
-    const response = await httpRequest<HomeWizardApiIdentifyResponse>(this.endpoints.identify, {
+    const response = await fetch(this.endpoints.identify, {
       method,
     });
 
@@ -199,7 +174,7 @@ export class HomeWizardApi {
       return this.throwApiError(method, response);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as HomeWizardApiIdentifyResponse;
 
     this.log.debug(this.loggerPrefix, `Energy Socket identified: ${JSON.stringify(data)}`);
 

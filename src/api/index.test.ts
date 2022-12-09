@@ -3,19 +3,12 @@ import { loggerMock } from '../tests/mocks/logger';
 import { mockBasicInformationResponse } from './mocks/data/basic';
 import { mockStateResponse } from './mocks/data/state';
 import { mockIdentifyResponse } from './mocks/data/identify';
-import { mockApiPath, mockHostname, mockIp, mockPort } from './mocks/api-url';
+import { mockApiPath, mockApiUrl } from './mocks';
 
 const newApi = () => {
   const mockSerialNumber = '12345';
 
-  return new HomeWizardApi(
-    mockIp,
-    mockPort,
-    mockApiPath,
-    mockHostname,
-    mockSerialNumber,
-    loggerMock,
-  );
+  return new HomeWizardApi(mockApiUrl, mockApiPath, mockSerialNumber, loggerMock);
 };
 
 describe('HomeWizardApi', () => {
