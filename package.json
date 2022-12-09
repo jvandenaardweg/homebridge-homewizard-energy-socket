@@ -52,7 +52,6 @@
     "husky": "^8.0.2",
     "is-ci": "^3.0.1",
     "lint-staged": "^13.1.0",
-    "msw": "^0.49.1",
     "nodemon": "^2.0.20",
     "prettier": "^2.8.0",
     "release-it": "^15.5.1",
@@ -63,7 +62,8 @@
     "vitest": "^0.25.3"
   },
   "dependencies": {
-    "bonjour-service": "^1.0.14"
+    "bonjour-service": "^1.0.14",
+    "undici": "^5.14.0"
   },
   "release-it": {
     "git": {
