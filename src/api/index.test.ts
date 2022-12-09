@@ -73,7 +73,7 @@ describe('HomeWizardApi', () => {
     const responseFn = () => homeWizardApi.getBasicInformation();
 
     expect(responseFn()).rejects.toThrowError(
-      'Api GET call at http://localhost/api failed, with status 500 and response data: Server error!',
+      'Api GET call at http://localhost/api failed with status 500 and response data: Server error!',
     );
   });
 
