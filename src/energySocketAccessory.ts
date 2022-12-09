@@ -47,10 +47,8 @@ export class EnergySocketAccessory {
     );
 
     this.homeWizardApi = new HomeWizardApi(
-      properties.ip,
-      properties.port,
+      `http://${properties.ip}:${properties.port}`,
       properties.path,
-      properties.hostname,
       properties.serialNumber,
       this.platform.log,
     );
