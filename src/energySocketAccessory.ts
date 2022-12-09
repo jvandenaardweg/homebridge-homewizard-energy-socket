@@ -3,16 +3,16 @@ import {
   PlatformAccessory,
   CharacteristicValue,
   PlatformAccessoryEvent,
-} from "homebridge";
-import { HomeWizardApi } from "@/api";
+} from 'homebridge';
+import { HomeWizardApi } from '@/api';
 
-import { HomebridgeHomeWizardEnergySocket } from "@/platform";
+import { HomebridgeHomeWizardEnergySocket } from '@/platform';
 import {
   EnergySocketAccessoryProperties,
   HomeWizardApiStateResponse,
   HomeWizardEnergyPlatformAccessoryContext,
   PLATFORM_MANUFACTURER,
-} from "@/api/types";
+} from '@/api/types';
 
 /**
  * Platform Accessory
@@ -28,7 +28,7 @@ export class EnergySocketAccessory {
 
   constructor(
     private readonly platform: HomebridgeHomeWizardEnergySocket,
-    private readonly accessory: PlatformAccessory<HomeWizardEnergyPlatformAccessoryContext>
+    private readonly accessory: PlatformAccessory<HomeWizardEnergyPlatformAccessoryContext>,
   ) {
     const properties = accessory.context.energySocket;
 
@@ -40,25 +40,25 @@ export class EnergySocketAccessory {
 
     this.platform.log.debug(
       this.loggerPrefix,
-      "Initializing platform accessory",
+      'Initializing platform accessory',
       accessory.UUID,
       accessory.displayName,
-      accessory.context.energySocket
+      accessory.context.energySocket,
     );
 
     this.homeWizardApi = new HomeWizardApi(
-      properties.apiUrl,
-      loggerPrefix,
-      this.platform.log
+      properties.ip,
+      properties.port,
+      properties.path,
+      properties.hostname,
+      properties.serialNumber,
+      this.platform.log,
     );
 
     // Set accessory information
     this.accessory
       .getService(this.platform.Service.AccessoryInformation)
-      ?.setCharacteristic(
-        this.platform.Characteristic.Manufacturer,
-        PLATFORM_MANUFACTURER
-      );
+      ?.setCharacteristic(this.platform.Characteristic.Manufacturer, PLATFORM_MANUFACTURER);
 
     // Get the Outlet service if it exists, otherwise create a new Outlet service
     // We can create multiple services for each accessory
@@ -70,7 +70,7 @@ export class EnergySocketAccessory {
     this.service
       .setCharacteristic(
         this.platform.Characteristic.Name,
-        accessory.context.energySocket.displayName
+        accessory.context.energySocket.displayName,
       )
       .setCharacteristic(this.platform.Characteristic.OutletInUse, true);
 
@@ -86,10 +86,7 @@ export class EnergySocketAccessory {
       .onGet(this.handleGetOn.bind(this));
 
     // Listen for the "identify" event for this Accessory
-    this.accessory.on(
-      PlatformAccessoryEvent.IDENTIFY,
-      this.handleIdentify.bind(this)
-    );
+    this.accessory.on(PlatformAccessoryEvent.IDENTIFY, this.handleIdentify.bind(this));
   }
 
   /**
@@ -99,9 +96,7 @@ export class EnergySocketAccessory {
     const firmwareVersionString = this.accessory
       .getService(this.platform.Service.AccessoryInformation)
       ?.getCharacteristic(this.platform.Characteristic.FirmwareRevision).value;
-    const firmwareVersion = firmwareVersionString
-      ? Number(firmwareVersionString)
-      : null;
+    const firmwareVersion = firmwareVersionString ? Number(firmwareVersionString) : null;
 
     return firmwareVersion;
   }
@@ -116,8 +111,7 @@ export class EnergySocketAccessory {
     try {
       await this.homeWizardApi.putIdentify(this.firmwareVersion);
     } catch (error) {
-      const fallbackErrorMessage =
-        "A unknown error occurred while identifying the Energy Socket";
+      const fallbackErrorMessage = 'A unknown error occurred while identifying the Energy Socket';
 
       throw this.handleAccessoryApiError(error, fallbackErrorMessage);
     }
@@ -131,20 +125,20 @@ export class EnergySocketAccessory {
         .getService(this.platform.Service.AccessoryInformation)
         ?.setCharacteristic(
           this.platform.Characteristic.Model,
-          `${response.product_name} (${response.product_type})` // "Energy Socket (HWE-SKT"
+          `${response.product_name} (${response.product_type})`, // "Energy Socket (HWE-SKT"
         )
         .setCharacteristic(
           this.platform.Characteristic.SerialNumber,
-          response.serial // Like: "1c23e7280952"
+          response.serial, // Like: "1c23e7280952"
         )
         // The firmware version of the device. Some API features may not work with different firmware versions.
         .setCharacteristic(
           this.platform.Characteristic.FirmwareRevision,
-          response.firmware_version // Like: "3.02"
+          response.firmware_version, // Like: "3.02"
         );
     } catch (error) {
       const fallbackErrorMessage =
-        "A unknown error occurred while setting the required characteristics";
+        'A unknown error occurred while setting the required characteristics';
 
       throw this.handleAccessoryApiError(error, fallbackErrorMessage);
     }
@@ -161,11 +155,11 @@ export class EnergySocketAccessory {
       if (this.localStateResponse?.switch_lock === true) {
         this.platform.log.warn(
           this.loggerPrefix,
-          `This Energy Socket (${this.accessory.context.energySocket.serialNumber}) is locked. Please enable the "Switch lock" setting in the HomeWizard Energy app for this Energy Socket.`
+          `This Energy Socket (${this.accessory.context.energySocket.serialNumber}) is locked. Please enable the "Switch lock" setting in the HomeWizard Energy app for this Energy Socket.`,
         );
 
         throw new this.platform.api.hap.HapStatusError(
-          this.platform.api.hap.HAPStatus.NOT_ALLOWED_IN_CURRENT_STATE
+          this.platform.api.hap.HAPStatus.NOT_ALLOWED_IN_CURRENT_STATE,
         );
       }
 
@@ -173,8 +167,7 @@ export class EnergySocketAccessory {
         power_on: value as boolean,
       });
     } catch (error) {
-      const fallbackErrorMessage =
-        "A unknown error occurred while setting the ON state";
+      const fallbackErrorMessage = 'A unknown error occurred while setting the ON state';
 
       throw this.handleAccessoryApiError(error, fallbackErrorMessage);
     }
@@ -204,15 +197,14 @@ export class EnergySocketAccessory {
 
       return response.power_on;
     } catch (error) {
-      const errorMessage =
-        "A unknown error occurred while getting the ON state";
+      const errorMessage = 'A unknown error occurred while getting the ON state';
 
       throw this.handleAccessoryApiError(error, errorMessage);
     }
   }
 
   handleAccessoryApiError(error: unknown, fallbackErrorMessage?: string) {
-    let errorMessage = fallbackErrorMessage || "A unknown error occurred";
+    let errorMessage = fallbackErrorMessage || 'A unknown error occurred';
 
     if (error instanceof Error) {
       errorMessage = error.message;
@@ -222,7 +214,7 @@ export class EnergySocketAccessory {
 
     // TODO: handle scenario where the device is offline, is fetched in homekit and shows as non responsive. But then comes back online again. The status is not being updated and api keeps coming back as 403
     return new this.platform.api.hap.HapStatusError(
-      this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE
+      this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE,
     );
   }
 }
