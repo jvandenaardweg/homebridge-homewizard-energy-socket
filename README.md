@@ -10,11 +10,19 @@
 
 This Homebridge plugin exposes your [HomeWizard Energy Sockets](https://www.homewizard.com/shop/wi-fi-energy-socket/) to Apple HomeKit. So you can use the Home App to switch your Energy Sockets on or off and integrate the Energy Sockets into your Home Automations.
 
+## Features
+
+- Control Energy Sockets from within the Home App
+- Use Energy Sockets in your Home Automations
+- Automatically discovers Energy Sockets in your network
+
+This plugin does not provide a way to show the current power consumption of the Energy Sockets. This is a limitation of HomeKit and not of this plugin.
+
 ## Getting started
 
-For Homebridge to communicate with your Energy Sockets, it is required to enable the "Local API" setting and disable the "Switch lock" setting from within the HomeWizard [Energy App](https://apps.apple.com/app/homewizard-energy/id1492427207) for each Energy Socket you want to expose to Apple HomeKit. It is also adviced to assign fixed/static IP addresses to each Energy Socket in your network to improve reliability.
+For Homebridge to communicate with your Energy Sockets, it is required to enable the "Local API" setting and disable the "Switch lock" setting from within the HomeWizard [Energy App](https://apps.apple.com/app/homewizard-energy/id1492427207) for each Energy Socket you want to expose to Apple HomeKit. It is also advised to assign fixed/static IP addresses to each Energy Socket in your network to improve reliability.
 
-### Enabling the Local API setting and disable the Switch lock setting (required)
+### 1. Enabling the Local API setting and disable the Switch lock setting
 
 1. Open your HomeWizard Energy app
 2. Go to settings and choose "Meters"
@@ -24,23 +32,26 @@ For Homebridge to communicate with your Energy Sockets, it is required to enable
 
 More on this on the HomeWizard support page: [Integrating Energy with other systems (API)](https://helpdesk.homewizard.com/en/articles/5935977-integrating-energy-with-other-systems-api)
 
-After installing this plugin, the plugin will automatically discover the Energy Sockets in your network that have "Local API" enabled.
-
-### Set fixed IP addresses
-To add to the reliability of your HomeKit accessories, it is adviced to assign static/fixed IP addresses to devices you use within Apple's Home App. Not doing this might result in your Energy Socket not responding when controlling within the Home App.
-
-1. Open your local router or network settings
-2. Find the IP addresses of each Energy Socket you want to use
-3. Make sure they use a fixed IP address
-
-## Installation in Homebridge
+### 2. Installation of the plugin bridge
 
 This package is published on NPM, so available on the Homebridge plugin page
 
 1. Go to your Homebridge UI and click on "Plugins"
 2. Search for `HomeWizard Energy` and select the plugin `Homebridge HomeWizard Energy Socket` from `@jvandenaardweg` and click "Install"
-3. No additional configuration is required. But make sure to follow the instructions provided by Homebridge after you enabled the plugin.
+3. On the plugin Settings, set the name you want to use for this plugin, or leave it empty to use the default. Click Save.
+4. Click the little QR code icon for the plugin and enable the bridge. Save it and restart Homebridge.
+5. After restarting Homebridge, click the QR code icon again and scan the QR code with your iPhone using the Home App. This will add the plugin bridge to your Home App.
 
-After enabling the plugin, the plugin will automatically discover the Energy Sockets in your network. Is your Energy Socket not discovered? Make sure you enabled the "Local API" setting in the HomeWizard "Energy" app and then restart the Homebridge plugin and/or server.
+After enabling the plugin, the plugin will automatically discover the Energy Sockets in your network that have the "Local API" setting enabled using Multicast DNS. More on this in the [HomeWizard API documentation about Discovery](https://homewizard-energy-api.readthedocs.io/discovery.html).
+
+Is your Energy Socket not discovered? Try a restart of the Homebridge plugin and/or server and verify if the Energy Socket is still available/online in the Energy App.
+
+### 3. Adding Energy Sockets to your Home
+
+Each Energy socket is published as an "external accessory" within Homebridge. This means you need to add each Energy Socket to your Home manually and they are not automatically added into your Home when you add this plugin as a new bridge. External accessories allow you to choose only the Energy Sockets you want to use within the Home App and gives you the ability to remove Energy Sockets without having to delete the entire plugin's bridge from the Home App.
+
+1. Open the Home App, select "Add accessory" and select "More options". You should now see all the Energy Sockets that are found in your network that have the "Local API" option enabled.
+2. Select each Energy Socket and follow the instructions to add it to your Home. Use the "Setup code" (example: `123-45-678`) provided by Homebridge on the Homebridge dashboard to add the Energy Socket to your Home. It's the same Setup code you used to add Homebridge to your Home.
+3. Done! You can now use the Energy Sockets within your Home App.
 
 Make sure to read this Wiki article about [Identifying the Energy Socket in the Home App](https://github.com/jvandenaardweg/homebridge-homewizard-energy-socket/wiki/Identifying-the-Energy-Socket-in-the-Home-App)

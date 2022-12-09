@@ -11,6 +11,14 @@ export interface HttpRequestResponse<T> {
   json(): Promise<T>;
 }
 
+// extend the error class for a http timeout error
+export class HttpTimeoutError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'HttpTimeoutError';
+  }
+}
+
 type HttpRequestOptions = Omit<
   RequestOptions,
   'protocol' | 'host' | 'path' | 'port' | 'hostname' | 'localAddress' | 'href'
@@ -52,6 +60,7 @@ export const httpRequest = <T>(
         'Content-Length': body?.length || 0,
         ...options?.headers,
       },
+      timeout: 2000, // 2 seconds low default timeout, we are on a local network, so it should be fast
       ...options,
     } satisfies RequestOptions;
 
@@ -101,6 +110,10 @@ export const httpRequest = <T>(
     });
 
     req.on('error', reject);
+
+    req.on('timeout', () => {
+      reject(new HttpTimeoutError(`Request timed out after ${requestOptions.timeout}ms`));
+    });
 
     if (body) {
       req.write(body);

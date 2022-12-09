@@ -1,16 +1,16 @@
-import { PlatformConfig } from "homebridge";
+import { PlatformConfig } from 'homebridge';
 
-export const PLATFORM_MANUFACTURER = "HomeWizard";
+export const PLATFORM_MANUFACTURER = 'HomeWizard';
 
 /**
  * We can discover devices on the local network using the `_hwenergy._tcp` domain.
  *
- * The Bonjour service we use in our plugin only needs `hwenergy` and use the option `protocol: 'tcp'`.
+ * The mDNS service we use in our plugin only needs `hwenergy` for the tcp method: `mdns.tcp('hwenergy')`
  *
  * @link: https://homewizard-energy-api.readthedocs.io/discovery.html#discovery
  */
-export const MDNS_DISCOVERY_TYPE = "hwenergy";
-export const MDNS_DISCOVERY_PROTOCOL = "tcp";
+export const MDNS_DISCOVERY_TYPE = 'hwenergy';
+export const MDNS_DISCOVERY_PROTOCOL = 'tcp';
 
 /**
  * A list of device types that HomeWizard supports.
@@ -20,11 +20,11 @@ export const MDNS_DISCOVERY_PROTOCOL = "tcp";
  * @link https://homewizard-energy-api.readthedocs.io/getting-started.html#supported-devices
  */
 export enum HomeWizardSupportedDeviceTypes {
-  WIFI_PI_METER = "HWE-P1",
-  WIFI_ENERGY_SOCKET = "HWE-SKT",
-  WIFI_WATER_METER = "HWE-WTR",
-  WIFI_KWH_METER_PHASE_1 = "SDM230-wifi",
-  WIFI_KWH_METER_PHASE_2 = "SDM630-wifi",
+  WIFI_PI_METER = 'HWE-P1',
+  WIFI_ENERGY_SOCKET = 'HWE-SKT',
+  WIFI_WATER_METER = 'HWE-WTR',
+  WIFI_KWH_METER_PHASE_1 = 'SDM230-wifi',
+  WIFI_KWH_METER_PHASE_2 = 'SDM630-wifi',
 }
 
 export interface TxtRecord {
@@ -40,31 +40,40 @@ export interface TxtRecord {
   product_type: string;
 }
 
+export enum EnergySocketNetworkStatus {
+  ONLINE = 'online',
+  OFFLINE = 'offline',
+  /** Initial default network status. We just don't know if the Energy Socket is online or offline when using this status. */
+  UNKNOWN = 'unknown',
+}
+
 export interface EnergySocketAccessoryProperties {
   /** Accessory UUID, used to identify the accessory within HomeBridge. This uuid is generated from the `id` and `serialNumber`, which are the same. */
   uuid: string;
-  /** A unique identifier for the device, required by HomeBridge to generated the `uuid`. We use the serial number like: "3c23e75825d0" */
-  id: string;
-  /** Hostname of the device. Example: `"energysocket-185952.local"` */
+  /** Hostname of the device, with a trailing dot. Example: `"energysocket-185952.local."` */
   hostname: string;
+  /** Name of the device. Example: `"energysocket-185952"` */
+  name: string | undefined;
   /** The IP address of the device. Example: `"192.168.1.20"` */
   ip: string;
   /** The Mac Address of the device. This is generated from the `serialNumber`. Example: `"3c:12:e7:65:98:52"`. */
   mac: string;
   /** The port at which the API of this device is running. Example: 80 */
   port: number;
-  /** The path to the API. Example: `"/api/v1"` */
+  /** The path to the API including the version. When versions change, this might return an other version. Example: `"/api/v1"` */
   path: string;
   /** The API url of this device, without trailing slash. Example: "`http://192.168.1.20`" */
-  apiUrl: string;
+  // apiUrl: string;
   /** The serial number of the device. Example: `"3c12e7659852"`. This is also a the Mac address of the device. */
   serialNumber: string;
-  /** The product name of this device. Example: `"Energy Socket"` */
-  name: string;
-  /** The `name` with the `serialNumber` included, like: `"Energy Socket 3c12e7659852"` */
+  /** The `name` with the `serialNumber` included, like: `"Energy Socket 3c12e7659852". This is the name the Home App will show to the user when first discovering an Energy Socket.` */
   displayName: string;
+  /** The product name of this device. Example: `"Energy Socket"` */
+  productName: string;
   /** A device type identifier. Example: `"HWE-SKT"` */
-  type: string;
+  productType: string;
+  /** Indicates if the Energy Socket is discovered on the local network */
+  networkStatus: EnergySocketNetworkStatus;
 }
 
 /**
@@ -120,7 +129,7 @@ export interface HomeWizardApiBasicInformationResponse {
  * @link: https://homewizard-energy-api.readthedocs.io/endpoints.html#identify-api-v1-identify
  */
 export interface HomeWizardApiIdentifyResponse {
-  identify: "ok";
+  identify: 'ok';
 }
 
 export interface HomeWizardEnergyPlatformAccessoryContext {
