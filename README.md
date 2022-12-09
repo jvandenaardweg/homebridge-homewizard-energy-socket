@@ -55,3 +55,11 @@ Each Energy socket is published as an "external accessory" within Homebridge. Th
 3. Done! You can now use the Energy Sockets within your Home App.
 
 Make sure to read this Wiki article about [Identifying the Energy Socket in the Home App](https://github.com/jvandenaardweg/homebridge-homewizard-energy-socket/wiki/Identifying-the-Energy-Socket-in-the-Home-App)
+
+## Removing Energy Sockets from your Home
+
+1. Open the Home App and select the Energy Socket you want to remove
+2. Tap on the settings icon and select "Remove Accessory"
+3. Done! The Energy Socket is now removed from your Home.
+
+Additionally, disable the "Local API" setting for the Energy Socket in the Energy App. This will prevent the Energy Socket from being discovered by the plugin again.

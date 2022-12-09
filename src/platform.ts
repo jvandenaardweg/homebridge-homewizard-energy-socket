@@ -417,11 +417,6 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     const hostname = service.host; // Example: energysocket-220852.local. (with trailing dot)
 
     const serialNumber = txtRecord.serial;
-    const mac =
-      txtRecord.serial
-        .match(/.{1,2}/g)
-        ?.join(':')
-        .toUpperCase() || ''; // The serial is the MAC address, but without the colons, so we add them here
     const path = txtRecord.path;
     const productName = txtRecord.product_name;
     const productType = txtRecord.product_type;
@@ -439,7 +434,6 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     const energySocketProperties = {
       uuid,
       ip,
-      mac,
       port,
       hostname,
       name,

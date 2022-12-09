@@ -56,8 +56,6 @@ export interface EnergySocketAccessoryProperties {
   name: string | undefined;
   /** The IP address of the device. Example: `"192.168.1.20"` */
   ip: string;
-  /** The Mac Address of the device. This is generated from the `serialNumber`. Example: `"3c:12:e7:65:98:52"`. */
-  mac: string;
   /** The port at which the API of this device is running. Example: 80 */
   port: number;
   /** The path to the API including the version. When versions change, this might return an other version. Example: `"/api/v1"` */
