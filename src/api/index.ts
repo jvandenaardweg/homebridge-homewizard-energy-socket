@@ -6,7 +6,7 @@ import {
   HomeWizardApiStatePutResponse,
   HomeWizardApiStateResponse,
 } from '@/api/types';
-import { fetch, Response } from 'undici';
+import { Dispatcher, request } from 'undici';
 
 // globalThis.fetch = fetch;
 
@@ -50,10 +50,18 @@ export class HomeWizardApi {
     return `[Api] -> ${this.url} (${this.serialNumber}) -> `;
   }
 
-  async throwApiError(method: string, response: Response): Promise<never> {
+  isResponseOk(response: Dispatcher.ResponseData): boolean {
+    return response.statusCode >= 200 && response.statusCode < 300;
+  }
+
+  async throwApiError(
+    url: string,
+    method: string,
+    response: Dispatcher.ResponseData,
+  ): Promise<never> {
     throw new HomeWizardApiError(
-      `Api ${method.toUpperCase()} call at ${response.url} failed, with status ${
-        response.status
+      `Api ${method.toUpperCase()} call at ${url} failed, with status ${
+        response.statusCode
       } and response data ${JSON.stringify(response)}`,
     );
   }
@@ -68,18 +76,20 @@ export class HomeWizardApi {
    * @link https://homewizard-energy-api.readthedocs.io/endpoints.html#basic-information-api
    */
   async getBasicInformation(): Promise<HomeWizardApiBasicInformationResponse> {
-    this.log.debug(this.loggerPrefix, `Fetching the basic information at ${this.endpoints.basic}`);
+    const url = this.endpoints.basic;
+
+    this.log.debug(this.loggerPrefix, `Fetching the basic information at ${url}`);
 
     const method = 'GET';
-    const response = await fetch(this.endpoints.basic, {
+    const response = await request(url, {
       method,
     });
 
-    if (!response.ok) {
-      return this.throwApiError(method, response);
+    if (!this.isResponseOk(response)) {
+      return this.throwApiError(url, method, response);
     }
 
-    const data = (await response.json()) as HomeWizardApiBasicInformationResponse;
+    const data = (await response.body.json()) as HomeWizardApiBasicInformationResponse;
 
     this.log.debug(this.loggerPrefix, `Fetched basic information: ${JSON.stringify(data)}`);
 
@@ -92,18 +102,20 @@ export class HomeWizardApi {
    * @link https://homewizard-energy-api.readthedocs.io/endpoints.html#state-api-v1-state
    */
   async getState(): Promise<HomeWizardApiStateResponse> {
-    this.log.debug(this.loggerPrefix, `Fetching the state at ${this.endpoints.state}`);
+    const url = this.endpoints.state;
+
+    this.log.debug(this.loggerPrefix, `Fetching the state at ${url}`);
 
     const method = 'GET';
-    const response = await fetch(this.endpoints.state, {
+    const response = await request(url, {
       method,
     });
 
-    if (!response.ok) {
-      return this.throwApiError(method, response);
+    if (!this.isResponseOk(response)) {
+      return this.throwApiError(url, method, response);
     }
 
-    const data = (await response.json()) as HomeWizardApiStateResponse;
+    const data = (await response.body.json()) as HomeWizardApiStateResponse;
 
     this.log.info(this.loggerPrefix, `Energy Socket state is ${data.power_on ? 'ON' : 'OFF'}`);
 
@@ -116,22 +128,24 @@ export class HomeWizardApi {
    * @link https://homewizard-energy-api.readthedocs.io/endpoints.html#state-api-v1-state
    */
   async putState(params: HomeWizardApiStatePutParams): Promise<HomeWizardApiStatePutResponse> {
+    const url = this.endpoints.state;
+
     this.log.debug(
       this.loggerPrefix,
       `Setting the state to ${JSON.stringify(params)} at ${this.endpoints.state}`,
     );
 
     const method = 'PUT';
-    const response = await fetch(this.endpoints.state, {
+    const response = await request(this.endpoints.state, {
       method,
       body: JSON.stringify(params),
     });
 
-    if (!response.ok) {
-      return this.throwApiError(method, response);
+    if (!this.isResponseOk(response)) {
+      return this.throwApiError(url, method, response);
     }
 
-    const data = (await response.json()) as HomeWizardApiStatePutResponse;
+    const data = (await response.body.json()) as HomeWizardApiStatePutResponse;
 
     this.log.debug(
       this.loggerPrefix,
@@ -162,19 +176,21 @@ export class HomeWizardApi {
       );
     }
 
-    this.log.debug(this.loggerPrefix, `Fetching identify at ${this.endpoints.identify}`);
+    const url = this.endpoints.identify;
+
+    this.log.debug(this.loggerPrefix, `Fetching identify at ${url}`);
 
     const method = 'PUT';
 
-    const response = await fetch(this.endpoints.identify, {
+    const response = await request(url, {
       method,
     });
 
-    if (!response.ok) {
-      return this.throwApiError(method, response);
+    if (!this.isResponseOk(response)) {
+      return this.throwApiError(url, method, response);
     }
 
-    const data = (await response.json()) as HomeWizardApiIdentifyResponse;
+    const data = (await response.body.json()) as HomeWizardApiIdentifyResponse;
 
     this.log.debug(this.loggerPrefix, `Energy Socket identified: ${JSON.stringify(data)}`);
 
