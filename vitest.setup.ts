@@ -1,15 +1,17 @@
-import { mockApiAgent } from './src/api/mocks/index';
-import { setGlobalDispatcher } from 'undici';
-import { afterAll, afterEach, beforeAll, vi } from 'vitest';
+// import { mockApiAgent, mockApiPool } from './src/api/mocks/index';
+// import { setGlobalDispatcher } from 'undici';
+import { afterAll, afterEach, vi } from 'vitest';
 
-beforeAll(() => {
-  setGlobalDispatcher(mockApiAgent);
-});
+// beforeAll(() => {
+//   setGlobalDispatcher(mockApiAgent);
+// });
 
 afterEach(() => {
   vi.clearAllMocks();
+
+  // mockApiPool.destroy();
 });
 
-afterAll(async () => {
-  await mockApiAgent.close();
+afterAll(() => {
+  // await mockApiAgent.close();
 });

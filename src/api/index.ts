@@ -66,10 +66,12 @@ export class HomeWizardApi {
     method: string,
     response: Dispatcher.ResponseData,
   ): Promise<never> {
+    const text = await response.body.text();
+
     throw new HomeWizardApiError(
       `Api ${method.toUpperCase()} call at ${url} failed, with status ${
         response.statusCode
-      } and response data ${JSON.stringify(response)}`,
+      } and response data: ${text}`,
     );
   }
 
