@@ -4,6 +4,8 @@ import { mockBasicInformationResponse } from './mocks/data/basic';
 import { mockStateResponse } from './mocks/data/state';
 import { mockIdentifyResponse } from './mocks/data/identify';
 import { mockApiPath, mockApiUrl } from './mocks';
+import { Interceptable, MockAgent, setGlobalDispatcher } from 'undici';
+import { HomeWizardApiStatePutParams } from './types';
 
 const newApi = () => {
   const mockSerialNumber = '12345';
@@ -11,7 +13,28 @@ const newApi = () => {
   return new HomeWizardApi(mockApiUrl, mockApiPath, mockSerialNumber, loggerMock);
 };
 
+let mockApiAgent: MockAgent;
+let mockApiPool: Interceptable;
+
 describe('HomeWizardApi', () => {
+  beforeEach(() => {
+    mockApiAgent = new MockAgent({
+      bodyTimeout: 10,
+      keepAliveTimeout: 10,
+      keepAliveMaxTimeout: 10,
+    });
+
+    mockApiAgent.disableNetConnect();
+
+    setGlobalDispatcher(mockApiAgent);
+
+    mockApiPool = mockApiAgent.get(mockApiUrl);
+  });
+
+  afterEach(async () => {
+    await mockApiAgent.close();
+  });
+
   it('should be able to create a new instance', () => {
     const homeWizardApi = newApi();
 
@@ -19,6 +42,52 @@ describe('HomeWizardApi', () => {
   });
 
   it('should GET the "basic" endpoint', async () => {
+    mockApiPool
+      .intercept({
+        path: '/api',
+        method: 'GET',
+      })
+      .reply(() => ({
+        data: mockBasicInformationResponse,
+        statusCode: 200,
+      }));
+
+    const homeWizardApi = newApi();
+    const basicInformation = await homeWizardApi.getBasicInformation();
+
+    expect(basicInformation).toStrictEqual(mockBasicInformationResponse);
+  });
+
+  it('should throw an error when GET the "basic" endpoint returns a server error', async () => {
+    mockApiPool
+      .intercept({
+        path: '/api',
+        method: 'GET',
+      })
+      .reply(() => ({
+        data: 'Server error!',
+        statusCode: 500,
+      }));
+
+    const homeWizardApi = newApi();
+    const responseFn = () => homeWizardApi.getBasicInformation();
+
+    expect(responseFn()).rejects.toThrowError(
+      'Api GET call at http://localhost/api failed, with status 500 and response data: Server error!',
+    );
+  });
+
+  it('should GET the "basic" endpoint', async () => {
+    mockApiPool
+      .intercept({
+        path: '/api',
+        method: 'GET',
+      })
+      .reply(() => ({
+        data: mockBasicInformationResponse,
+        statusCode: 200,
+      }));
+
     const homeWizardApi = newApi();
     const basicInformation = await homeWizardApi.getBasicInformation();
 
@@ -26,6 +95,16 @@ describe('HomeWizardApi', () => {
   });
 
   it('should GET the "state" endpoint', async () => {
+    mockApiPool
+      .intercept({
+        path: `${mockApiPath}/state`,
+        method: 'GET',
+      })
+      .reply(() => ({
+        data: mockStateResponse,
+        statusCode: 200,
+      }));
+
     const homeWizardApi = newApi();
     const state = await homeWizardApi.getState();
 
@@ -33,6 +112,31 @@ describe('HomeWizardApi', () => {
   });
 
   it('should PUT the "state" endpoint', async () => {
+    mockApiPool
+      .intercept({
+        path: `${mockApiPath}/state`,
+        method: 'PUT',
+      })
+      .reply(({ body }) => {
+        if (!body) {
+          return {
+            statusCode: 400,
+          };
+        }
+
+        const bodyParams = JSON.parse(body.toString()) as HomeWizardApiStatePutParams;
+
+        const updatedStateResponse = {
+          ...mockStateResponse,
+          ...bodyParams,
+        };
+
+        return {
+          data: updatedStateResponse,
+          statusCode: 200,
+        };
+      });
+
     const homeWizardApi = newApi();
     const updatedPowerOn = true;
 
@@ -44,6 +148,16 @@ describe('HomeWizardApi', () => {
   });
 
   it('should PUT the "identify" endpoint', async () => {
+    mockApiPool
+      .intercept({
+        path: `${mockApiPath}/identify`,
+        method: 'PUT',
+      })
+      .reply(() => ({
+        data: mockIdentifyResponse,
+        statusCode: 200,
+      }));
+
     const homeWizardApi = newApi();
     const firmwareVersion = 3;
 
