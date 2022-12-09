@@ -7,19 +7,20 @@ import { mockStateResponse } from './data/state';
 
 export const mockApiUrl = 'http://localhost';
 export const mockApiPath = '/api/v1';
-export const mockIp = '127.0.0.1';
 export const mockPort = 80;
 
-export const mockAgent = new MockAgent({
-  keepAliveTimeout: 10, // milliseconds
-  keepAliveMaxTimeout: 10, // milliseconds
+// Lower the timeouts when mocking, no need for high timeouts
+export const mockApiAgent = new MockAgent({
+  bodyTimeout: 10,
+  keepAliveTimeout: 10,
+  keepAliveMaxTimeout: 10,
 });
 
-mockAgent.disableNetConnect(); // prevent actual requests to the api
+mockApiAgent.disableNetConnect(); // prevent actual requests to the api
 
-const mockPool = mockAgent.get(mockApiUrl);
+const mockApiPool = mockApiAgent.get(mockApiUrl);
 
-mockPool
+mockApiPool
   .intercept({
     path: '/api',
     method: 'GET',
@@ -29,7 +30,7 @@ mockPool
     statusCode: 200,
   }));
 
-mockPool
+mockApiPool
   .intercept({
     path: `${mockApiPath}/state`,
     method: 'GET',
@@ -39,7 +40,7 @@ mockPool
     statusCode: 200,
   }));
 
-mockPool
+mockApiPool
   .intercept({
     path: `${mockApiPath}/state`,
     method: 'PUT',
@@ -64,7 +65,7 @@ mockPool
     };
   });
 
-mockPool
+mockApiPool
   .intercept({
     path: `${mockApiPath}/identify`,
     method: 'PUT',

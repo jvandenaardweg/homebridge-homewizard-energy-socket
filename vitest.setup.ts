@@ -1,9 +1,9 @@
-import { mockAgent } from './src/api/mocks/index';
+import { mockApiAgent } from './src/api/mocks/index';
 import { setGlobalDispatcher } from 'undici';
 import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 
 beforeAll(() => {
-  setGlobalDispatcher(mockAgent);
+  setGlobalDispatcher(mockApiAgent);
 });
 
 afterEach(() => {
@@ -11,5 +11,5 @@ afterEach(() => {
 });
 
 afterAll(async () => {
-  await mockAgent.close();
+  await mockApiAgent.close();
 });

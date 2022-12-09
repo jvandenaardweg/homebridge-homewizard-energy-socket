@@ -6,9 +6,16 @@ import {
   HomeWizardApiStatePutResponse,
   HomeWizardApiStateResponse,
 } from '@/api/types';
-import { Dispatcher, request } from 'undici';
+import { Dispatcher, request as undiciRequest } from 'undici';
 
-// globalThis.fetch = fetch;
+type RequestArgs = Parameters<typeof undiciRequest>;
+
+// Set a default timeout on all requests
+const request = (...args: RequestArgs) =>
+  undiciRequest(args[0], {
+    ...args[1],
+    bodyTimeout: 2000, // 2 seconds, we are on a local network, so all request should be fast
+  });
 
 export class HomeWizardApiError extends Error {
   constructor(message: string) {
