@@ -111,6 +111,25 @@ describe('HomeWizardApi', () => {
     expect(state).toStrictEqual(mockStateResponse);
   });
 
+  it('should throw an error when GET the "state" endpoint returns a server error', async () => {
+    mockApiPool
+      .intercept({
+        path: `${mockApiPath}/state`,
+        method: 'GET',
+      })
+      .reply(() => ({
+        data: 'Server error!',
+        statusCode: 500,
+      }));
+
+    const homeWizardApi = newApi();
+    const responseFn = () => homeWizardApi.getState();
+
+    expect(responseFn()).rejects.toThrowError(
+      'Api GET call at http://localhost/api/v1/state failed with status 500 and response data: Server error!',
+    );
+  });
+
   it('should PUT the "state" endpoint', async () => {
     mockApiPool
       .intercept({
@@ -147,6 +166,28 @@ describe('HomeWizardApi', () => {
     expect(state.power_on).toBe(updatedPowerOn);
   });
 
+  it('should throw an error when PUT the "state" endpoint returns a server error', async () => {
+    mockApiPool
+      .intercept({
+        path: `${mockApiPath}/state`,
+        method: 'PUT',
+      })
+      .reply(() => ({
+        data: 'Server error!',
+        statusCode: 500,
+      }));
+
+    const homeWizardApi = newApi();
+    const responseFn = () =>
+      homeWizardApi.putState({
+        power_on: true,
+      });
+
+    expect(responseFn()).rejects.toThrowError(
+      'Api PUT call at http://localhost/api/v1/state failed with status 500 and response data: Server error!',
+    );
+  });
+
   it('should PUT the "identify" endpoint', async () => {
     mockApiPool
       .intercept({
@@ -166,6 +207,25 @@ describe('HomeWizardApi', () => {
     expect(identify).toStrictEqual(mockIdentifyResponse);
   });
 
+  it('should throw an error when PUT the "identify" endpoint returns a server error', async () => {
+    mockApiPool
+      .intercept({
+        path: `${mockApiPath}/identify`,
+        method: 'PUT',
+      })
+      .reply(() => ({
+        data: 'Server error!',
+        statusCode: 500,
+      }));
+
+    const homeWizardApi = newApi();
+    const responseFn = () => homeWizardApi.putIdentify(3);
+
+    expect(responseFn()).rejects.toThrowError(
+      'Api PUT call at http://localhost/api/v1/identify failed with status 500 and response data: Server error!',
+    );
+  });
+
   it('should error when firmware version on PUT "identify" endpoint is too low', async () => {
     const homeWizardApi = newApi();
     const firmwareVersion = 2;
@@ -174,6 +234,28 @@ describe('HomeWizardApi', () => {
 
     expect(identifyFn()).rejects.toThrow(
       'Cannot identify this Energy Socket. Firmware version is 2. But the identify feature is only available on Energy Sockets with firmware version 3.00 or later.',
+    );
+  });
+
+  it('should error when firmware version on PUT "identify" endpoint is null', async () => {
+    const homeWizardApi = newApi();
+    const firmwareVersion = null;
+
+    const identifyFn = async () => homeWizardApi.putIdentify(firmwareVersion);
+
+    expect(identifyFn()).rejects.toThrow(
+      'Cannot identify this Energy Socket. The firmware version is not set.',
+    );
+  });
+
+  it('should error when firmware version on PUT "identify" endpoint is 0', async () => {
+    const homeWizardApi = newApi();
+    const firmwareVersion = 0;
+
+    const identifyFn = async () => homeWizardApi.putIdentify(firmwareVersion);
+
+    expect(identifyFn()).rejects.toThrow(
+      'Cannot identify this Energy Socket. The firmware version is not set.',
     );
   });
 });
