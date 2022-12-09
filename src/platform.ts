@@ -266,7 +266,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     serviceName: string | undefined,
   ): EnergySocketPlatformAccessory | undefined {
     const cachedAccessory = Object.values(this.cachedAccessories).find(
-      cachedAccessory => cachedAccessory.context.energySocket.name === serviceName,
+      cachedAccessory => cachedAccessory.context.energySocket.serviceName === serviceName,
     );
 
     return cachedAccessory;
@@ -423,7 +423,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     const ip = service.addresses?.[0] as string; // get the first address
     const port = service.port; // 80
     const displayName = `${productName} ${serialNumber}`; // "Energy Socket 3c12e7659852", which is used as the name in HomeKit
-    const name = service.name || service.host.split('.')[0]; // service.name could be undefined according to the types, fallback to using the host without .local, which is the same "energysocket-220852"
+    const serviceName = service.name || service.host.split('.')[0]; // service.name could be undefined according to the types, fallback to using the host without .local, which is the same "energysocket-220852"
     const networkStatus = EnergySocketNetworkStatus.ONLINE;
 
     // generate a unique id for the accessory this should be generated from
@@ -436,7 +436,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
       ip,
       port,
       hostname,
-      name,
+      serviceName,
       path,
       serialNumber,
       displayName,

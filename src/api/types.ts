@@ -52,8 +52,8 @@ export interface EnergySocketAccessoryProperties {
   uuid: string;
   /** Hostname of the device, with a trailing dot. Example: `"energysocket-185952.local."` */
   hostname: string;
-  /** Name of the device. Example: `"energysocket-185952"` */
-  name: string | undefined;
+  /** Name of the device/service. Example: `"energysocket-185952"` */
+  serviceName: string | undefined;
   /** The IP address of the device. Example: `"192.168.1.20"` */
   ip: string;
   /** The port at which the API of this device is running. Example: 80 */
