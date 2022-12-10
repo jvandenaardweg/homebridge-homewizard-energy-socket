@@ -41,9 +41,16 @@ This package is published on NPM, so available on the Homebridge plugin page
 3. On the plugin Settings, set the name you want to use for this plugin, or leave it empty to use the default. Click Save.
 4. Click the little QR code icon for the plugin and enable the bridge. Save it and restart Homebridge.
 5. After restarting Homebridge, click the QR code icon again and scan the QR code with your iPhone using the Home App. This will add the plugin bridge to your Home App.
+6. Your Energy Sockets should now be available to configure in the Home App
+
+Make sure to read this Wiki article about [Identifying the Energy Socket in the Home App](https://github.com/jvandenaardweg/homebridge-homewizard-energy-socket/wiki/Identifying-the-Energy-Socket-in-the-Home-App)
+
+## Troubleshooting
 
 After enabling the plugin, the plugin will automatically discover the Energy Sockets in your network that have the "Local API" setting enabled using Multicast DNS. More on this in the [HomeWizard API documentation about Discovery](https://homewizard-energy-api.readthedocs.io/discovery.html).
 
-Is your Energy Socket not discovered? Try a restart of the Homebridge plugin and/or server and verify if the Energy Socket is still available/online in the Energy App.
+If no Energy Sockets could be found:
 
-Make sure to read this Wiki article about [Identifying the Energy Socket in the Home App](https://github.com/jvandenaardweg/homebridge-homewizard-energy-socket/wiki/Identifying-the-Energy-Socket-in-the-Home-App)
+- There probably is an issue with Multicast DNS in your network. Check your network settings and/or router settings to enable Multicast DNS.
+- Try a restart of the Homebridge plugin and/or server
+- Verify if the Energy Sockets are still available/online in the Energy App.
