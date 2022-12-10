@@ -153,6 +153,10 @@ export class EnergySocketAccessory {
     }
   }
 
+  get isSwitchLockEnabled(): boolean {
+    return this.localStateResponse?.switch_lock === true;
+  }
+
   /**
    * Handle "SET" requests from HomeKit
    * These are sent when the user changes the state of an accessory, for example, turning on a Light bulb.
@@ -161,12 +165,14 @@ export class EnergySocketAccessory {
     try {
       // If the switch_lock setting is true, we cannot enable the Energy Socket through the API
       // The user first has to enable the Switch Lock in the HomeWizard Energy app
-      if (this.localStateResponse?.switch_lock === true) {
+      if (this.isSwitchLockEnabled) {
         this.platform.log.warn(
           this.loggerPrefix,
           `This Energy Socket (${this.accessory.context.energySocket.serialNumber}) is locked. Please enable the "Switch lock" setting in the HomeWizard Energy app for this Energy Socket.`,
         );
 
+        // Throw an error to HomeKit
+        // The Energy Socket will show as "No response" and we will log the above warning to the Homebridge log
         throw new this.platform.api.hap.HapStatusError(
           this.platform.api.hap.HAPStatus.NOT_ALLOWED_IN_CURRENT_STATE,
         );
