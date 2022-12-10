@@ -3,7 +3,6 @@ import {
   HomeWizardApiBasicInformationResponse,
   HomeWizardApiIdentifyResponse,
   HomeWizardApiStatePutParams,
-  HomeWizardApiStatePutResponse,
   HomeWizardApiStateResponse,
 } from '@/api/types';
 import { Dispatcher, request as undiciRequest } from 'undici';
@@ -125,7 +124,10 @@ export class HomeWizardApi {
 
     const data = (await response.body.json()) as HomeWizardApiStateResponse;
 
-    this.log.info(this.loggerPrefix, `Energy Socket state is ${data.power_on ? 'ON' : 'OFF'}`);
+    this.log.debug(
+      this.loggerPrefix,
+      `Received state ${JSON.stringify(data)} from ${this.endpoints.state}`,
+    );
 
     return data;
   }
@@ -135,7 +137,9 @@ export class HomeWizardApi {
    *
    * @link https://homewizard-energy-api.readthedocs.io/endpoints.html#state-api-v1-state
    */
-  async putState(params: HomeWizardApiStatePutParams): Promise<HomeWizardApiStatePutResponse> {
+  async putState<Keys extends keyof HomeWizardApiStateResponse>(
+    params: HomeWizardApiStatePutParams<Keys>,
+  ): Promise<HomeWizardApiStatePutParams<Keys>> {
     const url = this.endpoints.state;
 
     this.log.debug(
@@ -153,11 +157,11 @@ export class HomeWizardApi {
       return this.throwApiError(url, method, response);
     }
 
-    const data = (await response.body.json()) as HomeWizardApiStatePutResponse;
+    const data = (await response.body.json()) as HomeWizardApiStatePutParams<Keys>;
 
     this.log.debug(
       this.loggerPrefix,
-      `Energy Socket state is updated to ${data.power_on ? 'ON' : 'OFF'}`,
+      `Received updated state ${JSON.stringify(data)} from ${this.endpoints.state}`,
     );
 
     return data;

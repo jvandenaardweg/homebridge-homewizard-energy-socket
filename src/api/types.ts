@@ -1,6 +1,6 @@
-import { PlatformConfig } from "homebridge";
+import { PlatformConfig } from 'homebridge';
 
-export const PLATFORM_MANUFACTURER = "HomeWizard";
+export const PLATFORM_MANUFACTURER = 'HomeWizard';
 
 /**
  * We can discover devices on the local network using the `_hwenergy._tcp` domain.
@@ -9,8 +9,8 @@ export const PLATFORM_MANUFACTURER = "HomeWizard";
  *
  * @link: https://homewizard-energy-api.readthedocs.io/discovery.html#discovery
  */
-export const MDNS_DISCOVERY_TYPE = "hwenergy";
-export const MDNS_DISCOVERY_PROTOCOL = "tcp";
+export const MDNS_DISCOVERY_TYPE = 'hwenergy';
+export const MDNS_DISCOVERY_PROTOCOL = 'tcp';
 
 /**
  * A list of device types that HomeWizard supports.
@@ -20,11 +20,11 @@ export const MDNS_DISCOVERY_PROTOCOL = "tcp";
  * @link https://homewizard-energy-api.readthedocs.io/getting-started.html#supported-devices
  */
 export enum HomeWizardSupportedDeviceTypes {
-  WIFI_PI_METER = "HWE-P1",
-  WIFI_ENERGY_SOCKET = "HWE-SKT",
-  WIFI_WATER_METER = "HWE-WTR",
-  WIFI_KWH_METER_PHASE_1 = "SDM230-wifi",
-  WIFI_KWH_METER_PHASE_2 = "SDM630-wifi",
+  WIFI_PI_METER = 'HWE-P1',
+  WIFI_ENERGY_SOCKET = 'HWE-SKT',
+  WIFI_WATER_METER = 'HWE-WTR',
+  WIFI_KWH_METER_PHASE_1 = 'SDM230-wifi',
+  WIFI_KWH_METER_PHASE_2 = 'SDM630-wifi',
 }
 
 export interface TxtRecord {
@@ -90,8 +90,10 @@ export interface HomeWizardApiStateResponse {
   brightness: number;
 }
 
-export type HomeWizardApiStatePutParams = Partial<HomeWizardApiStateResponse>;
-export type HomeWizardApiStatePutResponse = Partial<HomeWizardApiStateResponse>;
+export type HomeWizardApiStatePutParams<Keys extends keyof HomeWizardApiStateResponse> = Pick<
+  HomeWizardApiStateResponse,
+  Keys
+>;
 
 /**
  * The /api endpoint allows you to get basic information from the device.
@@ -120,7 +122,7 @@ export interface HomeWizardApiBasicInformationResponse {
  * @link: https://homewizard-energy-api.readthedocs.io/endpoints.html#identify-api-v1-identify
  */
 export interface HomeWizardApiIdentifyResponse {
-  identify: "ok";
+  identify: 'ok';
 }
 
 export interface HomeWizardEnergyPlatformAccessoryContext {

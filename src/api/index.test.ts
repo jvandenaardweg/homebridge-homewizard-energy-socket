@@ -5,7 +5,7 @@ import { mockStateResponse } from './mocks/data/state';
 import { mockIdentifyResponse } from './mocks/data/identify';
 import { mockApiPath, mockApiUrl } from './mocks';
 import { Interceptable, MockAgent, setGlobalDispatcher } from 'undici';
-import { HomeWizardApiStatePutParams } from './types';
+import { HomeWizardApiStateResponse } from './types';
 
 const newApi = () => {
   const mockSerialNumber = '12345';
@@ -143,7 +143,7 @@ describe('HomeWizardApi', () => {
           };
         }
 
-        const bodyParams = JSON.parse(body.toString()) as HomeWizardApiStatePutParams;
+        const bodyParams = JSON.parse(body.toString()) as Partial<HomeWizardApiStateResponse>;
 
         const updatedStateResponse = {
           ...mockStateResponse,
@@ -166,7 +166,7 @@ describe('HomeWizardApi', () => {
     expect(state.power_on).toBe(updatedPowerOn);
   });
 
-  it('should throw an error when PUT the "state" endpoint returns a server error', async () => {
+  it('should throw an error on PUT when the "state" endpoint returns a server error', async () => {
     mockApiPool
       .intercept({
         path: `${mockApiPath}/state`,

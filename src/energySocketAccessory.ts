@@ -161,9 +161,14 @@ export class EnergySocketAccessory {
         );
       }
 
-      await this.homeWizardApi.putState({
+      const response = await this.homeWizardApi.putState({
         power_on: value as boolean,
       });
+
+      this.platform.log.debug(
+        this.loggerPrefix,
+        `Energy Socket state is updated to ${response.power_on ? 'ON' : 'OFF'}`,
+      );
     } catch (error) {
       const fallbackErrorMessage = 'A unknown error occurred while setting the ON state';
 
@@ -192,6 +197,11 @@ export class EnergySocketAccessory {
       // Put it in the local state, so we can keep track of the switch_lock setting, this must be enabled
       // If not, we can show a warning in the log
       this.localStateResponse = response;
+
+      this.platform.log.info(
+        this.loggerPrefix,
+        `Energy Socket state is ${response.power_on ? 'ON' : 'OFF'}`,
+      );
 
       return response.power_on;
     } catch (error) {
