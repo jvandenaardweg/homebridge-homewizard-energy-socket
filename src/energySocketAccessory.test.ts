@@ -139,30 +139,11 @@ describe('EnergySocketAccessory', () => {
 
     const energySocketAccessory = new EnergySocketAccessory(platformMock, accessoryMock);
 
-    energySocketAccessory.setLocalStateResponse({
-      power_on: !mockPowerOn,
-      switch_lock: false,
-      brightness: 0,
-    });
-
     expect(energySocketAccessory.handleSetOn(mockPowerOn)).resolves.toStrictEqual(mockResponse);
   });
 
   it('should throw an error when handleSetOn is invoked when switch_lock = true', async () => {
     const mockPowerOn = true;
-    const mockResponse = {
-      power_on: mockPowerOn,
-    };
-
-    mockApiPool
-      .intercept({
-        path: `${mockApiPath}/state`,
-        method: 'PUT',
-      })
-      .reply(() => ({
-        data: mockResponse,
-        statusCode: 200,
-      }));
 
     const handleAccessoryApiErrorSpy = vi.spyOn(
       EnergySocketAccessory.prototype,
@@ -170,12 +151,6 @@ describe('EnergySocketAccessory', () => {
     );
 
     const energySocketAccessory = new EnergySocketAccessory(platformMock, accessoryMock);
-
-    energySocketAccessory.setLocalStateResponse({
-      power_on: !mockPowerOn,
-      switch_lock: true,
-      brightness: 0,
-    });
 
     try {
       await energySocketAccessory.handleSetOn(mockPowerOn);
