@@ -178,6 +178,7 @@ describe('HomeWizardApi', () => {
       }));
 
     const homeWizardApi = newApi();
+
     const responseFn = () =>
       homeWizardApi.putState({
         power_on: true,

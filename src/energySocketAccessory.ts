@@ -9,6 +9,9 @@ import { HomeWizardApi } from '@/api';
 import { HomebridgeHomeWizardEnergySocket } from '@/platform';
 import {
   EnergySocketAccessoryProperties,
+  HomeWizardApiBasicInformationResponse,
+  HomeWizardApiIdentifyResponse,
+  HomeWizardApiStatePutParams,
   HomeWizardApiStateResponse,
   HomeWizardEnergyPlatformAccessoryContext,
   PLATFORM_MANUFACTURER,
@@ -75,7 +78,7 @@ export class EnergySocketAccessory {
     // Get additional characteristics async by calling the API
     // each service must implement at-minimum the "required characteristics" for the given service type
     // see https://developers.homebridge.io/#/service/Outlet
-    this.setAsyncRequiredCharacteristic();
+    // this.setAsyncRequiredCharacteristic();
 
     // Register handlers for the On/Off Characteristic
     this.service
@@ -105,9 +108,11 @@ export class EnergySocketAccessory {
    *
    * This method should blink the status light of the Energy Socket to help the user identify it.
    */
-  async handleIdentify(): Promise<void> {
+  async handleIdentify(): Promise<HomeWizardApiIdentifyResponse> {
     try {
-      await this.homeWizardApi.putIdentify(this.firmwareVersion);
+      const response = await this.homeWizardApi.putIdentify(this.firmwareVersion);
+
+      return response;
     } catch (error) {
       const fallbackErrorMessage = 'A unknown error occurred while identifying the Energy Socket';
 
@@ -115,7 +120,11 @@ export class EnergySocketAccessory {
     }
   }
 
-  async setAsyncRequiredCharacteristic(): Promise<void> {
+  getModel(productName: string, productType: string): string {
+    return `${productName} (${productType})`;
+  }
+
+  async setAsyncRequiredCharacteristic(): Promise<HomeWizardApiBasicInformationResponse> {
     try {
       const response = await this.homeWizardApi.getBasicInformation();
 
@@ -123,7 +132,7 @@ export class EnergySocketAccessory {
         .getService(this.platform.Service.AccessoryInformation)
         ?.setCharacteristic(
           this.platform.Characteristic.Model,
-          `${response.product_name} (${response.product_type})`, // "Energy Socket (HWE-SKT"
+          this.getModel(response.product_name, response.product_type), // "Energy Socket (HWE-SKT"
         )
         .setCharacteristic(
           this.platform.Characteristic.SerialNumber,
@@ -134,6 +143,8 @@ export class EnergySocketAccessory {
           this.platform.Characteristic.FirmwareRevision,
           response.firmware_version, // Like: "3.02"
         );
+
+      return response;
     } catch (error) {
       const fallbackErrorMessage =
         'A unknown error occurred while setting the required characteristics';
@@ -146,7 +157,7 @@ export class EnergySocketAccessory {
    * Handle "SET" requests from HomeKit
    * These are sent when the user changes the state of an accessory, for example, turning on a Light bulb.
    */
-  async handleSetOn(value: CharacteristicValue): Promise<void> {
+  async handleSetOn(value: CharacteristicValue): Promise<HomeWizardApiStatePutParams<'power_on'>> {
     try {
       // If the switch_lock setting is true, we cannot enable the Energy Socket through the API
       // The user first has to enable the Switch Lock in the HomeWizard Energy app
@@ -169,11 +180,17 @@ export class EnergySocketAccessory {
         this.loggerPrefix,
         `Energy Socket state is updated to ${response.power_on ? 'ON' : 'OFF'}`,
       );
+
+      return response;
     } catch (error) {
       const fallbackErrorMessage = 'A unknown error occurred while setting the ON state';
 
       throw this.handleAccessoryApiError(error, fallbackErrorMessage);
     }
+  }
+
+  setLocalStateResponse(response: HomeWizardApiStateResponse): void {
+    this.localStateResponse = response;
   }
 
   /**
@@ -196,7 +213,7 @@ export class EnergySocketAccessory {
 
       // Put it in the local state, so we can keep track of the switch_lock setting, this must be enabled
       // If not, we can show a warning in the log
-      this.localStateResponse = response;
+      this.setLocalStateResponse(response);
 
       this.platform.log.info(
         this.loggerPrefix,
