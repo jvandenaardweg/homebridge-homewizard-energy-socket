@@ -20,7 +20,7 @@ This plugin does not provide a way to show the current power consumption of the 
 
 ## Getting started
 
-For Homebridge to communicate with your Energy Sockets, it is required to enable the "Local API" setting and disable the "Switch lock" setting from within the HomeWizard [Energy App](https://apps.apple.com/app/homewizard-energy/id1492427207) for each Energy Socket you want to expose to Apple HomeKit. It is also advised to assign fixed/static IP addresses to each Energy Socket in your network to improve reliability.
+For Homebridge to communicate with your Energy Sockets, it is required to enable the "Local API" setting and disable the "Switch lock" setting from within the HomeWizard [Energy App](https://apps.apple.com/app/homewizard-energy/id1492427207). You must do this for each Energy Socket you want to expose in the Home App. It is also advised to assign fixed/static IP addresses to each Energy Socket in your network to improve reliability.
 
 ### 1. Enabling the Local API setting and disable the Switch lock setting
 
