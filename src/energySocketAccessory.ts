@@ -4,7 +4,7 @@ import {
   CharacteristicValue,
   PlatformAccessoryEvent,
 } from 'homebridge';
-import { HomeWizardApi } from '@/api';
+import { HomeWizardApi } from '@/api/api';
 
 import { HomebridgeHomeWizardEnergySocket } from '@/platform';
 import {

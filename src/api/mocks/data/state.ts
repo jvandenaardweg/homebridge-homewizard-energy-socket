@@ -1,4 +1,4 @@
-import { HomeWizardApiStateResponse } from "../../types";
+import { HomeWizardApiStateResponse } from '../../types';
 
 export const mockStateResponse: HomeWizardApiStateResponse = {
   brightness: 0,

@@ -1,5 +1,5 @@
-import { Logger } from "homebridge";
-import { vi } from "vitest";
+import { Logger } from 'homebridge';
+import { vi } from 'vitest';
 
 export const loggerMock = {
   info: vi.fn(),

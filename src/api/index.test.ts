@@ -1,5 +1,5 @@
-import { HomeWizardApi } from './index';
-import { loggerMock } from '../tests/mocks/logger';
+import { HomeWizardApi } from './api';
+import { loggerMock } from '../mocks/logger';
 import { mockBasicInformationResponse } from './mocks/data/basic';
 import { mockStateResponse } from './mocks/data/state';
 import { mockIdentifyResponse } from './mocks/data/identify';

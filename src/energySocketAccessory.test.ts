@@ -8,7 +8,7 @@ import {
   mockFirmwareRevision,
   mockSetCharacteristics,
   platformMock,
-} from './tests/mocks/platform';
+} from './mocks/platform';
 import { mockStateResponse } from './api/mocks/data/state';
 
 let mockApiAgent: MockAgent;
