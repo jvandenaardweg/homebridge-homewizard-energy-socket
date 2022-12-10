@@ -45,8 +45,8 @@ export class EnergySocketAccessory {
       this.loggerPrefix,
       'Initializing platform accessory',
       accessory.UUID,
-      accessory.displayName,
-      accessory.context.energySocket,
+      properties.displayName,
+      properties,
     );
 
     this.homeWizardApi = new HomeWizardApi(
@@ -59,7 +59,15 @@ export class EnergySocketAccessory {
     // Set accessory information
     this.accessory
       .getService(this.platform.Service.AccessoryInformation)
-      ?.setCharacteristic(this.platform.Characteristic.Manufacturer, PLATFORM_MANUFACTURER);
+      ?.setCharacteristic(this.platform.Characteristic.Manufacturer, PLATFORM_MANUFACTURER)
+      .setCharacteristic(
+        this.platform.Characteristic.Model,
+        this.getModel(properties.productName, properties.productType), // "Energy Socket (HWE-SKT"
+      )
+      .setCharacteristic(
+        this.platform.Characteristic.SerialNumber,
+        properties.serialNumber, // Like: "1c23e7280952"
+      );
 
     // Get the Outlet service if it exists, otherwise create a new Outlet service
     // We can create multiple services for each accessory
@@ -69,16 +77,13 @@ export class EnergySocketAccessory {
 
     // Set the service name, this is what is displayed as the default name on the Home app
     this.service
-      .setCharacteristic(
-        this.platform.Characteristic.Name,
-        accessory.context.energySocket.displayName,
-      )
+      .setCharacteristic(this.platform.Characteristic.Name, properties.displayName)
       .setCharacteristic(this.platform.Characteristic.OutletInUse, true);
 
     // Get additional characteristics async by calling the API
     // each service must implement at-minimum the "required characteristics" for the given service type
     // see https://developers.homebridge.io/#/service/Outlet
-    // this.setAsyncRequiredCharacteristic();
+    this.setAsyncCharacteristics();
 
     // Register handlers for the On/Off Characteristic
     this.service
@@ -124,25 +129,20 @@ export class EnergySocketAccessory {
     return `${productName} (${productType})`;
   }
 
-  async setAsyncRequiredCharacteristic(): Promise<HomeWizardApiBasicInformationResponse> {
+  setAsyncCharacteristics(): void {
+    this.setAsyncFirmwareVersion();
+  }
+
+  async setAsyncFirmwareVersion(): Promise<HomeWizardApiBasicInformationResponse> {
     try {
       const response = await this.homeWizardApi.getBasicInformation();
 
-      this.accessory
-        .getService(this.platform.Service.AccessoryInformation)
-        ?.setCharacteristic(
-          this.platform.Characteristic.Model,
-          this.getModel(response.product_name, response.product_type), // "Energy Socket (HWE-SKT"
-        )
-        .setCharacteristic(
-          this.platform.Characteristic.SerialNumber,
-          response.serial, // Like: "1c23e7280952"
-        )
-        // The firmware version of the device. Some API features may not work with different firmware versions.
-        .setCharacteristic(
-          this.platform.Characteristic.FirmwareRevision,
-          response.firmware_version, // Like: "3.02"
-        );
+      // The firmware version of the device. Some API features may not work with different firmware versions.
+      // We can only get the firmware version by calling this API, we don't have it upfront
+      this.accessory.getService(this.platform.Service.AccessoryInformation)?.setCharacteristic(
+        this.platform.Characteristic.FirmwareRevision,
+        response.firmware_version, // Like: "3.02"
+      );
 
       return response;
     } catch (error) {
@@ -168,7 +168,7 @@ export class EnergySocketAccessory {
       if (this.isSwitchLockEnabled) {
         this.platform.log.warn(
           this.loggerPrefix,
-          `This Energy Socket (${this.accessory.context.energySocket.serialNumber}) is locked. Please enable the "Switch lock" setting in the HomeWizard Energy app for this Energy Socket.`,
+          `This Energy Socket (${this.properties.serialNumber}) is locked. Please enable the "Switch lock" setting in the HomeWizard Energy app for this Energy Socket.`,
         );
 
         // Throw an error to HomeKit

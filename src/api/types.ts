@@ -19,7 +19,7 @@ export const MDNS_DISCOVERY_PROTOCOL = 'tcp';
  *
  * @link https://homewizard-energy-api.readthedocs.io/getting-started.html#supported-devices
  */
-export enum HomeWizardSupportedDeviceTypes {
+export enum HomeWizardDeviceTypes {
   WIFI_PI_METER = 'HWE-P1',
   WIFI_ENERGY_SOCKET = 'HWE-SKT',
   WIFI_WATER_METER = 'HWE-WTR',
@@ -43,14 +43,10 @@ export interface TxtRecord {
 export interface EnergySocketAccessoryProperties {
   /** Accessory UUID, used to identify the accessory within HomeBridge. This uuid is generated from the `id` and `serialNumber`, which are the same. */
   uuid: string;
-  /** A unique identifier for the device, required by HomeBridge to generated the `uuid`. We use the serial number like: "3c23e75825d0" */
-  id: string;
   /** Hostname of the device. Example: `"energysocket-185952.local"` */
   hostname: string;
   /** The IP address of the device. Example: `"192.168.1.20"` */
   ip: string;
-  /** The Mac Address of the device. This is generated from the `serialNumber`. Example: `"3c:12:e7:65:98:52"`. */
-  mac: string;
   /** The port at which the API of this device is running. Example: 80 */
   port: number;
   /** The path to the API. Example: `"/api/v1"` */
@@ -60,11 +56,11 @@ export interface EnergySocketAccessoryProperties {
   /** The serial number of the device. Example: `"3c12e7659852"`. This is also a the Mac address of the device. */
   serialNumber: string;
   /** The product name of this device. Example: `"Energy Socket"` */
-  name: string;
-  /** The `name` with the `serialNumber` included, like: `"Energy Socket 3c12e7659852"` */
-  displayName: string;
+  productName: string;
   /** A device type identifier. Example: `"HWE-SKT"` */
-  type: string;
+  productType: string;
+  /** The name we display to the user during first setup in the Home App, like: `"Energy Socket 3c12e7659852"` */
+  displayName: string;
 }
 
 /**

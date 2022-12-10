@@ -14,7 +14,7 @@ import { PLATFORM_NAME, PLUGIN_NAME } from '@/settings';
 import { EnergySocketAccessory } from '@/energySocketAccessory';
 import {
   EnergySocketAccessoryProperties,
-  HomeWizardSupportedDeviceTypes,
+  HomeWizardDeviceTypes,
   HomeWizardEnergyConfig,
   HomeWizardEnergyPlatformAccessoryContext,
   MDNS_DISCOVERY_PROTOCOL,
@@ -138,7 +138,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
   }
 
   isDeviceProductTypeSupported(txtRecord: TxtRecord): boolean {
-    return txtRecord.product_type === HomeWizardSupportedDeviceTypes.WIFI_ENERGY_SOCKET;
+    return txtRecord.product_type === HomeWizardDeviceTypes.WIFI_ENERGY_SOCKET;
   }
 
   handleDiscoveredService(service: BonjourService): void {
@@ -158,13 +158,11 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     if (!this.isDeviceProductTypeSupported(txtRecord)) {
       this.log.info(
         this.loggerPrefix,
-        `Found a device that is not an Energy Socket (${HomeWizardSupportedDeviceTypes.WIFI_ENERGY_SOCKET}), skipping`,
+        `Found a device that is not an Energy Socket (${HomeWizardDeviceTypes.WIFI_ENERGY_SOCKET}), skipping`,
         JSON.stringify(txtRecord),
       );
       return;
     }
-
-    // TODO: Skip if "Switch lock" setting is on
 
     // Service is an Energy Socket, and the Local API is enabled, so we can use it
 
@@ -177,14 +175,18 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     if (!existingAccessory) {
       // The accessory does not yet exist, so we need to create it
 
-      const { uuid, displayName, apiUrl } = energySocketProperties;
-
-      this.log.info(this.loggerPrefix, 'Adding new accessory:', displayName, apiUrl, uuid);
+      this.log.info(
+        this.loggerPrefix,
+        'Adding new accessory:',
+        energySocketProperties.displayName,
+        energySocketProperties.apiUrl,
+        energySocketProperties.uuid,
+      );
 
       // Create a new accessory
       const newAccessory = new this.api.platformAccessory<HomeWizardEnergyPlatformAccessoryContext>(
-        displayName,
-        uuid,
+        energySocketProperties.displayName,
+        energySocketProperties.uuid,
       );
 
       // Store a copy of our `energySocketProperties` in the `accessory.context`
@@ -233,17 +235,12 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     const hostname = service.host; // Example: energysocket-220852.local
 
     const serialNumber = txtRecord.serial;
-    const mac =
-      txtRecord.serial
-        .match(/.{1,2}/g)
-        ?.join(':')
-        .toUpperCase() || ''; // The serial is the MAC address, but without the colons, so we add them here
     const path = txtRecord.path;
-    const name = txtRecord.product_name;
-    const type = txtRecord.product_type;
+    const productName = txtRecord.product_name;
+    const productType = txtRecord.product_type;
     const ip = service.addresses?.[0] as string; // get the first address
     const port = service.port; // 80
-    const displayName = `${name} ${serialNumber}`; // "Energy Socket 3c12e7659852", which is used as the name in HomeKit
+    const displayName = `${productName} ${serialNumber}`; // "Energy Socket 3c12e7659852", which is used as the name in HomeKit
 
     // generate a unique id for the accessory this should be generated from
     // something globally unique, but constant, for example, the device serial
@@ -252,9 +249,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
 
     const energySocketInfo = {
       uuid,
-      id: serialNumber,
       ip,
-      mac,
       port,
       hostname,
       path,
@@ -263,9 +258,9 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
       // apiUrl: `http://${hostname}:${port}`,
       apiUrl: `http://${ip}:${port}`,
       serialNumber: serialNumber,
-      name,
+      productName,
       displayName,
-      type,
+      productType,
     } satisfies EnergySocketAccessoryProperties;
 
     this.log.debug(

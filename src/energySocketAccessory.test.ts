@@ -27,6 +27,18 @@ describe('EnergySocketAccessory', () => {
     setGlobalDispatcher(mockApiAgent);
 
     mockApiPool = mockApiAgent.get(mockApiUrl);
+
+    // Endpoint will be called when creating a new instance
+    // So we mock it every time
+    mockApiPool
+      .intercept({
+        path: `/api`,
+        method: 'GET',
+      })
+      .reply(() => ({
+        data: mockBasicInformationResponse,
+        statusCode: 200,
+      }));
   });
 
   afterEach(async () => {
@@ -87,7 +99,20 @@ describe('EnergySocketAccessory', () => {
     }
   });
 
-  it('should set the required characteristics when invoking setAsyncRequiredCharacteristic', async () => {
+  it('should invoke setAsyncCharacteristics when creating a new instance', async () => {
+    const setAsyncCharacteristicsSpy = vi.spyOn(
+      EnergySocketAccessory.prototype,
+      'setAsyncCharacteristics',
+    );
+
+    const energySocketAccessory = new EnergySocketAccessory(platformMock, accessoryMock);
+
+    expect(energySocketAccessory).toBeTruthy();
+
+    expect(setAsyncCharacteristicsSpy).toHaveBeenCalledOnce();
+  });
+
+  it('should set the required characteristics when invoking setAsyncFirmwareVersion', async () => {
     mockApiPool
       .intercept({
         path: '/api',
@@ -98,27 +123,20 @@ describe('EnergySocketAccessory', () => {
         statusCode: 200,
       }));
 
+    EnergySocketAccessory.prototype.setAsyncCharacteristics = vi.fn();
+
     const energySocketAccessory = new EnergySocketAccessory(platformMock, accessoryMock);
 
-    // Clear the mocks, we want to start capturing the calls from the setAsyncRequiredCharacteristic method
+    // Clear the mocks, we want to start capturing the calls from the setAsyncFirmwareVersion method
     vi.clearAllMocks();
 
-    expect(await energySocketAccessory.setAsyncRequiredCharacteristic()).toStrictEqual(
-      mockBasicInformationResponse,
-    );
+    const result = await energySocketAccessory.setAsyncFirmwareVersion();
 
-    const model = energySocketAccessory.getModel(
-      mockBasicInformationResponse.product_name,
-      mockBasicInformationResponse.product_type,
-    );
+    expect(result).toStrictEqual(mockBasicInformationResponse);
 
-    const serialNumber = mockBasicInformationResponse.serial;
     const firmwareRevision = mockBasicInformationResponse.firmware_version;
 
-    expect(mockSetCharacteristics).toHaveBeenCalledTimes(3);
-    expect(mockSetCharacteristics).toHaveBeenNthCalledWith(1, 'Model', model);
-    expect(mockSetCharacteristics).toHaveBeenNthCalledWith(2, 'SerialNumber', serialNumber);
-    expect(mockSetCharacteristics).toHaveBeenNthCalledWith(3, 'FirmwareRevision', firmwareRevision);
+    expect(mockSetCharacteristics).toHaveBeenCalledWith('FirmwareRevision', firmwareRevision);
   });
 
   it('should return the API response when handleSetOn is invoked with a boolean value and switch_lock = false', async () => {
@@ -144,6 +162,16 @@ describe('EnergySocketAccessory', () => {
 
   it('should throw an error when handleSetOn is invoked when switch_lock = true', async () => {
     const mockPowerOn = true;
+
+    mockApiPool
+      .intercept({
+        path: `/api`,
+        method: 'GET',
+      })
+      .reply(() => ({
+        data: mockBasicInformationResponse,
+        statusCode: 200,
+      }));
 
     const handleAccessoryApiErrorSpy = vi.spyOn(
       EnergySocketAccessory.prototype,
