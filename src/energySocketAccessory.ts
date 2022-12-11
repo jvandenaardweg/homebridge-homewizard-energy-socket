@@ -184,7 +184,7 @@ export class EnergySocketAccessory {
         power_on: value as boolean,
       });
 
-      this.platform.log.debug(
+      this.platform.log.info(
         this.loggerPrefix,
         `Energy Socket state is updated to ${response.power_on ? 'ON' : 'OFF'}`,
       );
