@@ -160,8 +160,11 @@ export class EnergySocketAccessory {
   /**
    * Handle "SET" requests from HomeKit
    * These are sent when the user changes the state of an accessory, for example, turning on a Light bulb.
+   *
+   * Do not return anything from this method. Otherwise we'll get this error:
+   * SET handler returned write response value, though the characteristic doesn't support write response. See https://homebridge.io/w/JtMGR for more info.
    */
-  async handleSetOn(value: CharacteristicValue): Promise<HomeWizardApiStatePutParams<'power_on'>> {
+  async handleSetOn(value: CharacteristicValue): Promise<void> {
     try {
       // If the switch_lock setting is true, we cannot enable the Energy Socket through the API
       // The user first has to enable the Switch Lock in the HomeWizard Energy app
@@ -186,8 +189,6 @@ export class EnergySocketAccessory {
         this.loggerPrefix,
         `Energy Socket state is updated to ${response.power_on ? 'ON' : 'OFF'}`,
       );
-
-      return response;
     } catch (error) {
       const fallbackErrorMessage = 'A unknown error occurred while setting the ON state';
 

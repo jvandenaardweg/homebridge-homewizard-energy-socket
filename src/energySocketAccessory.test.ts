@@ -141,7 +141,7 @@ describe('EnergySocketAccessory', () => {
     expect(mockSetCharacteristics).toHaveBeenCalledWith('FirmwareRevision', firmwareRevision);
   });
 
-  it('should return the API response when handleSetOn is invoked with a boolean value and switch_lock = false', async () => {
+  it('should resolve when handleSetOn is invoked with a boolean value and switch_lock = false', async () => {
     const mockPowerOn = true;
     const mockResponse = {
       power_on: mockPowerOn,
@@ -159,7 +159,7 @@ describe('EnergySocketAccessory', () => {
 
     const energySocketAccessory = new EnergySocketAccessory(platformMock, accessoryMock);
 
-    expect(energySocketAccessory.handleSetOn(mockPowerOn)).resolves.toStrictEqual(mockResponse);
+    expect(energySocketAccessory.handleSetOn(mockPowerOn)).resolves.toBeUndefined();
   });
 
   it('should throw an error when handleSetOn is invoked when switch_lock = true', async () => {
