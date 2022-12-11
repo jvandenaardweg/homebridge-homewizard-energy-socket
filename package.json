@@ -2,7 +2,7 @@
   "displayName": "Homebridge HomeWizard Energy Socket",
   "name": "homebridge-homewizard-energy-socket",
   "type": "module",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "This Homebridge plugin exposes your HomeWizard Energy Sockets to Apple HomeKit. So you can use the Home App to switch your Energy Sockets on or off and integrate the Energy Sockets into your Home Automations.",
   "license": "MIT",
   "repository": {
