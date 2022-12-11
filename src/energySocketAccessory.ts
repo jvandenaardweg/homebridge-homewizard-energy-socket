@@ -11,7 +11,6 @@ import {
   EnergySocketAccessoryProperties,
   HomeWizardApiBasicInformationResponse,
   HomeWizardApiIdentifyResponse,
-  HomeWizardApiStatePutParams,
   HomeWizardApiStateResponse,
   HomeWizardEnergyPlatformAccessoryContext,
   PLATFORM_MANUFACTURER,
