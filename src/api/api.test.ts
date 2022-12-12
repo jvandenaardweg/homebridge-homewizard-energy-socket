@@ -5,7 +5,8 @@ import { mockStateResponse } from './mocks/data/state';
 import { mockIdentifyResponse } from './mocks/data/identify';
 import { mockApiUrl } from './mocks/api';
 import { Interceptable, MockAgent, setGlobalDispatcher } from 'undici';
-import { HomeWizardApiStateResponse } from './types';
+import { HomeWizardApiStateResponse, HomeWizardDeviceTypes } from './types';
+import { mockEnergySocketDataResponse, mockP1MeterDataResponse } from './mocks/data/data';
 
 const newApi = () => {
   return new HomeWizardApi(mockApiUrl, {
@@ -258,5 +259,39 @@ describe('HomeWizardApi', () => {
     expect(identifyFn()).rejects.toThrow(
       'Cannot identify this Energy Socket. The firmware version is not set.',
     );
+  });
+
+  it('should GET the "data" endpoint as an Energy Socket', async () => {
+    mockApiPool
+      .intercept({
+        path: `/api/v1/data`,
+        method: 'GET',
+      })
+      .reply(() => ({
+        data: mockEnergySocketDataResponse,
+        statusCode: 200,
+      }));
+
+    const homeWizardApi = newApi();
+    const data = await homeWizardApi.getData(HomeWizardDeviceTypes.WIFI_ENERGY_SOCKET);
+
+    expect(data).toStrictEqual(mockEnergySocketDataResponse);
+  });
+
+  it('should GET the "data" endpoint as a P1 Meter', async () => {
+    mockApiPool
+      .intercept({
+        path: `/api/v1/data`,
+        method: 'GET',
+      })
+      .reply(() => ({
+        data: mockP1MeterDataResponse,
+        statusCode: 200,
+      }));
+
+    const homeWizardApi = newApi();
+    const data = await homeWizardApi.getData(HomeWizardDeviceTypes.WIFI_PI_METER);
+
+    expect(data).toStrictEqual(mockP1MeterDataResponse);
   });
 });

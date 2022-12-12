@@ -4,6 +4,9 @@ import {
   HomeWizardApiIdentifyResponse,
   HomeWizardApiStatePutParams,
   HomeWizardApiStateResponse,
+  EnergySocketDataResponse,
+  P1MeterDataResponse,
+  HomeWizardDeviceTypes,
 } from '@/api/types';
 import { Dispatcher, request as undiciRequest } from 'undici';
 
@@ -53,6 +56,7 @@ export class HomeWizardApi {
       basic: `${url}/api`,
       state: `${url}/api/${this.apiVersion}/state`,
       identify: `${url}/api/${this.apiVersion}/identify`,
+      data: `${url}/api/${this.apiVersion}/data`,
     };
   }
 
@@ -209,6 +213,53 @@ export class HomeWizardApi {
     const data = (await response.body.json()) as HomeWizardApiIdentifyResponse;
 
     this.log.debug(this.loggerPrefix, `Energy Socket identified: ${JSON.stringify(data)}`);
+
+    return data;
+  }
+
+  /**
+   * The /api/v1/data endpoint allows you to get the most recent measurement from the device.
+   *
+   * Note #1: All datapoints are “optional”; The API does not send datapoints that are null. Make sure your application can handle this.
+   *
+   * Note #2: The API for the watermeter can only be used when the watermeter is powered over USB. To save energy, the watermeter only connects to Wi-Fi a couple of times per day when powered with batteries.
+   *
+   * @link https://homewizard-energy-api.readthedocs.io/endpoints.html#recent-measurement-api-v1-data
+   */
+  async getData<T extends EnergySocketDataResponse>(
+    productType: HomeWizardDeviceTypes.WIFI_ENERGY_SOCKET,
+  ): Promise<T>;
+  async getData<T extends P1MeterDataResponse>(
+    productType: HomeWizardDeviceTypes.WIFI_PI_METER,
+  ): Promise<T>;
+  async getData<T extends EnergySocketDataResponse | P1MeterDataResponse>(
+    productType: HomeWizardDeviceTypes.WIFI_PI_METER | HomeWizardDeviceTypes.WIFI_ENERGY_SOCKET,
+  ): Promise<T> {
+    if (
+      productType !== HomeWizardDeviceTypes.WIFI_PI_METER &&
+      productType !== HomeWizardDeviceTypes.WIFI_ENERGY_SOCKET
+    ) {
+      throw new HomeWizardApiError(
+        `Product type "${productType}" is not supported for this API call.`,
+      );
+    }
+
+    const url = this.endpoints.data;
+
+    this.log.debug(this.loggerPrefix, `Fetching the data at ${url}`);
+
+    const method = 'GET';
+    const response = await request(url, {
+      method,
+    });
+
+    if (!this.isResponseOk(response)) {
+      return this.throwApiError(url, method, response);
+    }
+
+    const data = (await response.body.json()) as T;
+
+    this.log.debug(this.loggerPrefix, `Fetched data: ${JSON.stringify(data)}`);
 
     return data;
   }
