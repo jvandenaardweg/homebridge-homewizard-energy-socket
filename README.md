@@ -47,10 +47,14 @@ Make sure to read this Wiki article about [Identifying the Energy Socket in the 
 
 ## Troubleshooting
 
-After enabling the plugin, the plugin will automatically discover the Energy Sockets in your network that have the "Local API" setting enabled using Multicast DNS. More on this in the [HomeWizard API documentation about Discovery](https://homewizard-energy-api.readthedocs.io/discovery.html).
+After enabling the plugin, the plugin will automatically discover the Energy Sockets in your network that have the "Local API" setting enabled using Multicast DNS. Multicast DNS is a feature of all consumer routers. So unless you have changed these settings specifically, or using multiple different LAN networks, there should be no need to change any settings for this. It should just work.
 
-If no Energy Sockets could be found:
+More on this in the [HomeWizard API documentation about Discovery](https://homewizard-energy-api.readthedocs.io/discovery.html).
 
-- There probably is an issue with Multicast DNS in your network. Check your network settings and/or router settings to enable Multicast DNS.
-- Try a restart of the Homebridge plugin and/or server
-- Verify if the Energy Sockets are still available/online in the Energy App.
+If no Energy Sockets could be found, maybe this could help:
+
+- Verify if the Energy Sockets are still available/online in the Energy App
+- Verify if the Energy Sockets have the "Local API" setting enabled
+- Restart the Energy Sockets (unplug and plug them back in)
+- Restart the Homebridge plugin and/or server
+- If none of the above help, there probably is an issue with Multicast DNS in your network. Check your network settings and/or router settings to enable Multicast DNS.
