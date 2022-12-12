@@ -27,11 +27,11 @@ export class HomeWizardApiError extends Error {
   }
 }
 export class HomeWizardApiResponseError extends HomeWizardApiError {
-  url?: string;
-  statusCode?: number;
-  response?: string;
+  url: string;
+  statusCode: number;
+  response: string;
 
-  constructor(message: string, url?: string, statusCode?: number, response?: string) {
+  constructor(message: string, url: string, statusCode: number, response: string) {
     super(message);
     this.name = 'HomeWizardApiResponseError';
     this.url = url;
