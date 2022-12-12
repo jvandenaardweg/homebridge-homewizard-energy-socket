@@ -16,10 +16,16 @@
   "bugs": {
     "url": "https://github.com/jvandenaardweg/homebridge-homewizard-energy-socket/issues"
   },
-  "funding": {
-    "type": "github",
-    "url": "https://github.com/sponsors/jvandenaardweg"
-  },
+  "funding": [
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/jvandenaardweg"
+    },
+    {
+      "type": "paypal",
+      "url": "https://paypal.me/jvandenaardweg"
+    }
+  ],
   "engines": {
     "node": ">=14.18.1",
     "homebridge": ">=1.3.5"
