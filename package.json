@@ -4,6 +4,10 @@
   "version": "1.3.1",
   "description": "This Homebridge plugin exposes your HomeWizard Energy Sockets to Apple HomeKit. So you can use the Home App to switch your Energy Sockets on or off and integrate the Energy Sockets into your Home Automations.",
   "license": "MIT",
+  "author": {
+    "name": "Jordy van den Aardweg",
+    "url": "https://github.com/jvandenaardweg"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/jvandenaardweg/homebridge-homewizard-energy-socket.git"
