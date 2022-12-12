@@ -15,13 +15,13 @@ import { EnergySocketAccessory } from '@/energy-socket-accessory';
 import {
   EnergySocketAccessoryProperties,
   HomeWizardDeviceTypes,
-  HomeWizardEnergyConfig,
   HomeWizardEnergyPlatformAccessoryContext,
   MDNS_DISCOVERY_PROTOCOL,
   MDNS_DISCOVERY_TYPE,
   TxtRecord,
 } from '@/api/types';
 import { HomeWizardApi } from './api';
+import { HomebridgeHomeWizardEnergySocketsConfig } from './types';
 
 /**
  * HomebridgePlatform
@@ -34,7 +34,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
 
   public cachedAccessories: PlatformAccessory<HomeWizardEnergyPlatformAccessoryContext>[] = [];
 
-  private config: HomeWizardEnergyConfig;
+  private config: HomebridgeHomeWizardEnergySocketsConfig;
 
   private bonjour: Bonjour | null = null;
 
@@ -44,7 +44,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     const loggerPrefix = `[Platform Setup] -> `;
     this.loggerPrefix = loggerPrefix;
 
-    this.config = config as HomeWizardEnergyConfig;
+    this.config = config as HomebridgeHomeWizardEnergySocketsConfig;
 
     this.log.debug(loggerPrefix, 'Finished initializing platform:', config.name);
 
@@ -91,7 +91,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
    */
   isStaleCachedAccessory(
     cachedAccessory: PlatformAccessory<HomeWizardEnergyPlatformAccessoryContext>,
-    energySocketsConfig: HomeWizardEnergyConfig['energySockets'],
+    energySocketsConfig: HomebridgeHomeWizardEnergySocketsConfig['energySockets'],
   ): boolean {
     if (!energySocketsConfig) return false;
 

@@ -1,5 +1,3 @@
-import { PlatformConfig } from 'homebridge';
-
 export const PLATFORM_MANUFACTURER = 'HomeWizard';
 
 /**
@@ -62,16 +60,6 @@ export interface EnergySocketAccessoryProperties {
   /** The name we display to the user during first setup in the Home App, like: `"Energy Socket 3c12e7659852"` */
   displayName: string;
   firmwareVersion: string;
-}
-
-/**
- * See config.schema.json for the configuration options.
- */
-export interface HomeWizardEnergyConfig extends PlatformConfig {
-  energySockets?: {
-    name: string;
-    ip: string;
-  }[];
 }
 
 /**
