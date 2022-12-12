@@ -21,12 +21,20 @@ const request = (...args: RequestArgs) =>
   });
 
 export class HomeWizardApiError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'HomeWizardApiError';
+  }
+}
+export class HomeWizardApiResponseError extends HomeWizardApiError {
+  url?: string;
   statusCode?: number;
   response?: string;
 
-  constructor(message: string, statusCode?: number, response?: string) {
+  constructor(message: string, url?: string, statusCode?: number, response?: string) {
     super(message);
-    this.name = 'HomeWizardApiError';
+    this.name = 'HomeWizardApiResponseError';
+    this.url = url;
     this.statusCode = statusCode;
     this.response = response;
   }
@@ -73,7 +81,7 @@ export class HomeWizardApi {
     return response.statusCode >= 200 && response.statusCode < 300;
   }
 
-  async throwApiError(
+  async throwApiResponseError(
     url: string,
     method: string,
     response: Dispatcher.ResponseData,
@@ -81,8 +89,9 @@ export class HomeWizardApi {
     const { statusCode, body } = response;
     const text = await body.text();
 
-    throw new HomeWizardApiError(
+    throw new HomeWizardApiResponseError(
       `Api ${method} call at ${url} failed with status ${statusCode} and response data: ${text}`,
+      url,
       statusCode,
       text,
     );
@@ -108,7 +117,7 @@ export class HomeWizardApi {
     });
 
     if (!this.isResponseOk(response)) {
-      return this.throwApiError(url, method, response);
+      return this.throwApiResponseError(url, method, response);
     }
 
     const data = (await response.body.json()) as HomeWizardApiBasicInformationResponse;
@@ -134,7 +143,7 @@ export class HomeWizardApi {
     });
 
     if (!this.isResponseOk(response)) {
-      return this.throwApiError(url, method, response);
+      return this.throwApiResponseError(url, method, response);
     }
 
     const data = (await response.body.json()) as HomeWizardApiStateResponse;
@@ -169,7 +178,7 @@ export class HomeWizardApi {
     });
 
     if (!this.isResponseOk(response)) {
-      return this.throwApiError(url, method, response);
+      return this.throwApiResponseError(url, method, response);
     }
 
     const data = (await response.body.json()) as HomeWizardApiStatePutParams<Keys>;
@@ -214,7 +223,7 @@ export class HomeWizardApi {
     });
 
     if (!this.isResponseOk(response)) {
-      return this.throwApiError(url, method, response);
+      return this.throwApiResponseError(url, method, response);
     }
 
     const data = (await response.body.json()) as HomeWizardApiIdentifyResponse;
@@ -261,7 +270,7 @@ export class HomeWizardApi {
     });
 
     if (!this.isResponseOk(response)) {
-      return this.throwApiError(url, method, response);
+      return this.throwApiResponseError(url, method, response);
     }
 
     const data = (await response.body.json()) as T;

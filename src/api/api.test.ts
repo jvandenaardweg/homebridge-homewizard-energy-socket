@@ -1,4 +1,4 @@
-import { HomeWizardApi, HomeWizardApiError } from './api';
+import { HomeWizardApi, HomeWizardApiError, HomeWizardApiResponseError } from './api';
 import { loggerMock } from '../mocks/logger';
 import { mockBasicInformationResponse } from './mocks/data/basic';
 import { mockStateResponse } from './mocks/data/state';
@@ -304,14 +304,30 @@ describe('HomeWizardApi', () => {
   });
 
   it('should create a HomeWizardApiError instance', () => {
-    const error = new HomeWizardApiError('Test error', 500, 'Test response data');
+    const error = new HomeWizardApiError('Test error');
 
     expect(error).toBeInstanceOf(Error);
     expect(error).toBeInstanceOf(HomeWizardApiError);
     expect(error.message).toBe('Test error');
+
+    expect(error.toString()).toBe('HomeWizardApiError: Test error');
+  });
+
+  it('should create a HomeWizardApiResponseError instance', () => {
+    const error = new HomeWizardApiResponseError(
+      'Test error',
+      'http://localhost/api/v1/data',
+      500,
+      'Test response data',
+    );
+
+    expect(error).toBeInstanceOf(Error);
+    expect(error).toBeInstanceOf(HomeWizardApiResponseError);
+    expect(error.message).toBe('Test error');
+    expect(error.url).toBe('http://localhost/api/v1/data');
     expect(error.statusCode).toBe(500);
     expect(error.response).toBe('Test response data');
 
-    expect(error.toString()).toBe('HomeWizardApiError: Test error');
+    expect(error.toString()).toBe('HomeWizardApiResponseError: Test error');
   });
 });
