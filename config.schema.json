@@ -48,9 +48,13 @@
     {
       "type": "fieldset",
       "title": "Energy Sockets",
-      "description": "This config option is optional. Only use this if you want to bypass automatic discovery or use only the Energy Sockets you define here.",
+      "description": "<strong>This config option is optional.</strong> Only use this if you want to bypass automatic discovery or use only the Energy Sockets you define here. When no Energy Sockets are defined here, the plugin will automatically discover all Energy Sockets on your network.",
       "expandable": true,
       "items": [
+        {
+          "type": "help",
+          "helpvalue": "<p class='help-block'>To make communication with the Energy Socket reliable, make sure that it has a static IP address. You can set it from your router admin interface. More about that in the <a href='https://github.com/jvandenaardweg/homebridge-homewizard-energy-socket#readme' target='_blank'>README</a>.</p>"
+        },
         {
           "title": "Energy Socket",
           "key": "energySockets",
@@ -58,7 +62,8 @@
           "notitle": true,
           "items": [
             {
-              "type": "div",
+              "type": "flex",
+              "flex-flow": "row wrap",
               "items": [
                 {
                   "key": "energySockets[].name",
@@ -69,10 +74,6 @@
                   "key": "energySockets[].ip",
                   "title": "IP Address",
                   "placeholder": "192.168.0.10"
-                },
-                {
-                  "type": "help",
-                  "helpvalue": "<p class='help-block'>To make communication with the Energy Socket reliable, make sure that it has a static IP address. You can set it from your router admin interface.</p>"
                 }
               ]
             }
