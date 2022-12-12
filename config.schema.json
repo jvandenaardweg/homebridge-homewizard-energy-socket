@@ -4,11 +4,12 @@
   "singular": true,
   "schema": {
     "name": {
-      "title": "Plugin name",
+      "title": "Bridge name",
       "type": "string",
       "required": true,
       "placeholder": "HomeWizard Energy Socket",
-      "description": "Name to use for Homebridge logging purposes. Defaults to: HomeWizard Energy Socket"
+      "description": "You'll see this name when you add the bridge in your Home app and also in the logs within Homebridge.",
+      "default": "HomeWizard Energy Socket"
     }
   }
 }
