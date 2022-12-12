@@ -43,10 +43,7 @@ export class EnergySocketAccessory {
 
     this.platform.log.debug(
       this.loggerPrefix,
-      'Initializing platform accessory',
-      accessory.UUID,
-      properties.displayName,
-      properties,
+      `Initializing platform accessory ${JSON.stringify(properties)}`,
     );
 
     this.homeWizardApi = api;
