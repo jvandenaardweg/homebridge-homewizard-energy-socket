@@ -1,4 +1,4 @@
-import { HomeWizardApi } from './api';
+import { HomeWizardApi, HomeWizardApiError } from './api';
 import { loggerMock } from '../mocks/logger';
 import { mockBasicInformationResponse } from './mocks/data/basic';
 import { mockStateResponse } from './mocks/data/state';
@@ -209,7 +209,7 @@ describe('HomeWizardApi', () => {
     expect(identify).toStrictEqual(mockIdentifyResponse);
   });
 
-  it('should throw an error when PUT the "identify" endpoint returns a server error', async () => {
+  it('should throw an error when PUT on the "identify" endpoint returns a server error', async () => {
     mockApiPool
       .intercept({
         path: `/api/v1/identify`,
@@ -306,5 +306,37 @@ describe('HomeWizardApi', () => {
     expect(dataFn).rejects.toThrowError(
       'Product type "SDM230-wifi" is not supported for this API call.',
     );
+  });
+
+  it('should throw an error when GET on the "data" endpoint returns a server error', async () => {
+    mockApiPool
+      .intercept({
+        path: `/api/v1/data`,
+        method: 'GET',
+      })
+      .reply(() => ({
+        data: 'Server error!',
+        statusCode: 500,
+      }));
+
+    const homeWizardApi = newApi();
+
+    const dataFn = () => homeWizardApi.getData(HomeWizardDeviceTypes.WIFI_ENERGY_SOCKET);
+
+    expect(dataFn()).rejects.toThrowError(
+      'Api GET call at http://localhost/api/v1/data failed with status 500 and response data: Server error!',
+    );
+  });
+
+  it('should create a HomeWizardApiError instance', () => {
+    const error = new HomeWizardApiError('Test error', 500, 'Test response data');
+
+    expect(error).toBeInstanceOf(Error);
+    expect(error).toBeInstanceOf(HomeWizardApiError);
+    expect(error.message).toBe('Test error');
+    expect(error.statusCode).toBe(500);
+    expect(error.response).toBe('Test response data');
+
+    expect(error.toString()).toBe('HomeWizardApiError: Test error');
   });
 });

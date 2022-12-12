@@ -21,9 +21,14 @@ const request = (...args: RequestArgs) =>
   });
 
 export class HomeWizardApiError extends Error {
-  constructor(message: string) {
+  statusCode?: number;
+  response?: string;
+
+  constructor(message: string, statusCode?: number, response?: string) {
     super(message);
     this.name = 'HomeWizardApiError';
+    this.statusCode = statusCode;
+    this.response = response;
   }
 }
 
@@ -78,6 +83,8 @@ export class HomeWizardApi {
 
     throw new HomeWizardApiError(
       `Api ${method} call at ${url} failed with status ${statusCode} and response data: ${text}`,
+      statusCode,
+      text,
     );
   }
 
