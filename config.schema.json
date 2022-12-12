@@ -2,14 +2,83 @@
   "pluginAlias": "HomebridgeHomeWizardEnergySocket",
   "pluginType": "platform",
   "singular": true,
+  "headerDisplay": "Please [read the README](https://github.com/jvandenaardweg/homebridge-homewizard-energy-socket#readme) of the plugin for more information and instructions on how to configure it.",
+
   "schema": {
-    "name": {
-      "title": "Bridge name",
-      "type": "string",
-      "required": true,
-      "placeholder": "HomeWizard Energy Socket",
-      "description": "You'll see this name when you add the bridge in your Home app and also in the logs within Homebridge.",
-      "default": "HomeWizard Energy Socket"
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Bridge name",
+        "type": "string",
+        "required": true,
+        "placeholder": "HomeWizard Energy Socket",
+        "description": "You'll see this name when you add the bridge in your Home app and also in the logs within Homebridge.",
+        "default": "HomeWizard Energy Socket"
+      },
+      "energySockets": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "required": true
+            },
+            "ip": {
+              "type": "string",
+              "format": "ipv4",
+              "required": true
+            }
+          }
+        }
+      }
     }
-  }
+  },
+  "layout": [
+    {
+      "type": "flex",
+      "flex-flow": "row wrap",
+      "items": [
+        {
+          "key": "name",
+          "type": "name"
+        }
+      ]
+    },
+    {
+      "type": "fieldset",
+      "title": "Energy Sockets",
+      "description": "This config option is optional. Only use this if you want to bypass automatic discovery or use only the Energy Sockets you define here.",
+      "expandable": true,
+      "items": [
+        {
+          "title": "Energy Socket",
+          "key": "energySockets",
+          "type": "array",
+          "notitle": true,
+          "items": [
+            {
+              "type": "div",
+              "items": [
+                {
+                  "key": "energySockets[].name",
+                  "title": "Name",
+                  "placeholder": "What is plugged in?"
+                },
+                {
+                  "key": "energySockets[].ip",
+                  "title": "IP Address",
+                  "placeholder": "192.168.0.10"
+                },
+                {
+                  "type": "help",
+                  "helpvalue": "<p class='help-block'>To make communication with the Energy Socket reliable, make sure that it has a static IP address. You can set it from your router admin interface.</p>"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }

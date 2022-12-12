@@ -1,6 +1,6 @@
 import { EnergySocketAccessory } from './energy-socket-accessory';
 import { Interceptable, MockAgent, setGlobalDispatcher } from 'undici';
-import { mockApiPath, mockApiUrl, mockFirmwareVersion, mockSerialNumber } from './api/mocks/api';
+import { mockApiUrl, mockFirmwareVersion } from './api/mocks/api';
 import { mockIdentifyResponse } from './api/mocks/data/identify';
 import { mockBasicInformationResponse } from './api/mocks/data/basic';
 import { accessoryMock, platformMock } from './mocks/platform';
@@ -27,7 +27,9 @@ describe('EnergySocketAccessory', () => {
 
     mockApiPool = mockApiAgent.get(mockApiUrl);
 
-    mockApi = new HomeWizardApi(mockApiUrl, mockApiPath, mockSerialNumber, loggerMock);
+    mockApi = new HomeWizardApi(mockApiUrl, {
+      logger: loggerMock,
+    });
   });
 
   afterEach(async () => {
@@ -51,7 +53,7 @@ describe('EnergySocketAccessory', () => {
   it('should get a response from the identify endpoint', async () => {
     mockApiPool
       .intercept({
-        path: `${mockApiPath}/identify`,
+        path: `/api/v1/identify`,
         method: 'PUT',
       })
       .reply(() => ({
@@ -67,7 +69,7 @@ describe('EnergySocketAccessory', () => {
   it('should call handleAccessoryApiError when an error happens on handleIdentify', async () => {
     mockApiPool
       .intercept({
-        path: `${mockApiPath}/identify`,
+        path: `/api/v1/identify`,
         method: 'PUT',
       })
       .reply(() => ({
@@ -97,7 +99,7 @@ describe('EnergySocketAccessory', () => {
 
     mockApiPool
       .intercept({
-        path: `${mockApiPath}/state`,
+        path: `/api/v1/state`,
         method: 'PUT',
       })
       .reply(() => ({
@@ -140,7 +142,7 @@ describe('EnergySocketAccessory', () => {
   it('should return the power_on value when handleGetOn is invoked', async () => {
     mockApiPool
       .intercept({
-        path: `${mockApiPath}/state`,
+        path: `/api/v1/state`,
         method: 'GET',
       })
       .reply(() => ({
