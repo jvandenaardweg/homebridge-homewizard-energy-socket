@@ -35,6 +35,7 @@ describe('config.schema.json', () => {
     // now we get an error if we change the property name in config.schema.json and/or our types
     expect(properties).toHaveProperty(nameProperty);
     expect(properties.name).toHaveProperty('required');
+    expect(properties.name.required).toBe(true);
     expect(properties.name.type).toBe('string');
     expect(properties.name.default).toBe('HomeWizard Energy Socket');
   });
