@@ -8,17 +8,16 @@ import { Interceptable, MockAgent, setGlobalDispatcher } from 'undici';
 import { HomeWizardApiStateResponse, HomeWizardDeviceTypes } from './types';
 import { mockEnergySocketDataResponse, mockP1MeterDataResponse } from './mocks/data/data';
 
-const newApi = () => {
-  return new HomeWizardApi(mockApiUrl, {
-    logger: loggerMock,
-  });
-};
-
 let mockApiAgent: MockAgent;
 let mockApiPool: Interceptable;
+let homeWizardApi: HomeWizardApi;
 
 describe('HomeWizardApi', () => {
   beforeEach(() => {
+    homeWizardApi = new HomeWizardApi(mockApiUrl, {
+      logger: loggerMock,
+    });
+
     mockApiAgent = new MockAgent({
       bodyTimeout: 10,
       keepAliveTimeout: 10,
@@ -37,8 +36,6 @@ describe('HomeWizardApi', () => {
   });
 
   it('should be able to create a new instance', () => {
-    const homeWizardApi = newApi();
-
     expect(homeWizardApi).toBeTruthy();
   });
 
@@ -53,7 +50,6 @@ describe('HomeWizardApi', () => {
         statusCode: 200,
       }));
 
-    const homeWizardApi = newApi();
     const basicInformation = await homeWizardApi.getBasicInformation();
 
     expect(basicInformation).toStrictEqual(mockBasicInformationResponse);
@@ -70,7 +66,6 @@ describe('HomeWizardApi', () => {
         statusCode: 500,
       }));
 
-    const homeWizardApi = newApi();
     const responseFn = () => homeWizardApi.getBasicInformation();
 
     expect(responseFn()).rejects.toThrowError(
@@ -89,7 +84,6 @@ describe('HomeWizardApi', () => {
         statusCode: 200,
       }));
 
-    const homeWizardApi = newApi();
     const basicInformation = await homeWizardApi.getBasicInformation();
 
     expect(basicInformation).toStrictEqual(mockBasicInformationResponse);
@@ -106,7 +100,6 @@ describe('HomeWizardApi', () => {
         statusCode: 200,
       }));
 
-    const homeWizardApi = newApi();
     const state = await homeWizardApi.getState();
 
     expect(state).toStrictEqual(mockStateResponse);
@@ -123,7 +116,6 @@ describe('HomeWizardApi', () => {
         statusCode: 500,
       }));
 
-    const homeWizardApi = newApi();
     const responseFn = () => homeWizardApi.getState();
 
     expect(responseFn()).rejects.toThrowError(
@@ -157,7 +149,6 @@ describe('HomeWizardApi', () => {
         };
       });
 
-    const homeWizardApi = newApi();
     const updatedPowerOn = true;
 
     const state = await homeWizardApi.putState({
@@ -177,8 +168,6 @@ describe('HomeWizardApi', () => {
         data: 'Server error!',
         statusCode: 500,
       }));
-
-    const homeWizardApi = newApi();
 
     const responseFn = () =>
       homeWizardApi.putState({
@@ -201,7 +190,6 @@ describe('HomeWizardApi', () => {
         statusCode: 200,
       }));
 
-    const homeWizardApi = newApi();
     const firmwareVersion = 3;
 
     const identify = await homeWizardApi.putIdentify(firmwareVersion);
@@ -220,7 +208,6 @@ describe('HomeWizardApi', () => {
         statusCode: 500,
       }));
 
-    const homeWizardApi = newApi();
     const responseFn = () => homeWizardApi.putIdentify(3);
 
     expect(responseFn()).rejects.toThrowError(
@@ -229,7 +216,6 @@ describe('HomeWizardApi', () => {
   });
 
   it('should error when firmware version on PUT "identify" endpoint is too low', async () => {
-    const homeWizardApi = newApi();
     const firmwareVersion = 2;
 
     const identifyFn = async () => homeWizardApi.putIdentify(firmwareVersion);
@@ -240,7 +226,6 @@ describe('HomeWizardApi', () => {
   });
 
   it('should error when firmware version on PUT "identify" endpoint is null', async () => {
-    const homeWizardApi = newApi();
     const firmwareVersion = null;
 
     const identifyFn = async () => homeWizardApi.putIdentify(firmwareVersion);
@@ -251,7 +236,6 @@ describe('HomeWizardApi', () => {
   });
 
   it('should error when firmware version on PUT "identify" endpoint is 0', async () => {
-    const homeWizardApi = newApi();
     const firmwareVersion = 0;
 
     const identifyFn = async () => homeWizardApi.putIdentify(firmwareVersion);
@@ -272,7 +256,6 @@ describe('HomeWizardApi', () => {
         statusCode: 200,
       }));
 
-    const homeWizardApi = newApi();
     const data = await homeWizardApi.getData(HomeWizardDeviceTypes.WIFI_ENERGY_SOCKET);
 
     expect(data).toStrictEqual(mockEnergySocketDataResponse);
@@ -289,15 +272,12 @@ describe('HomeWizardApi', () => {
         statusCode: 200,
       }));
 
-    const homeWizardApi = newApi();
     const data = await homeWizardApi.getData(HomeWizardDeviceTypes.WIFI_PI_METER);
 
     expect(data).toStrictEqual(mockP1MeterDataResponse);
   });
 
   it('should throw an error when the productType parameter has an unsupported product type', async () => {
-    const homeWizardApi = newApi();
-
     const dataFn = () => homeWizardApi.getData('SOME-THING' as never);
 
     expect(dataFn).rejects.toThrowError(
@@ -315,8 +295,6 @@ describe('HomeWizardApi', () => {
         data: 'Server error!',
         statusCode: 500,
       }));
-
-    const homeWizardApi = newApi();
 
     const dataFn = () => homeWizardApi.getData(HomeWizardDeviceTypes.WIFI_ENERGY_SOCKET);
 
