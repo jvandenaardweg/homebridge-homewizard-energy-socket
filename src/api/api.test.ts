@@ -298,13 +298,10 @@ describe('HomeWizardApi', () => {
   it('should throw an error when the productType parameter has an unsupported product type', async () => {
     const homeWizardApi = newApi();
 
-    const dataFn = () =>
-      homeWizardApi.getData(
-        HomeWizardDeviceTypes.WIFI_KWH_METER_PHASE_1 as HomeWizardDeviceTypes.WIFI_ENERGY_SOCKET,
-      );
+    const dataFn = () => homeWizardApi.getData('SOME-THING' as never);
 
     expect(dataFn).rejects.toThrowError(
-      'Product type "SDM230-wifi" is not supported for this API call.',
+      'Product type "SOME-THING" is not supported for this API call.',
     );
   });
 
