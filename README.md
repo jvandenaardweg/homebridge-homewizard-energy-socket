@@ -47,7 +47,7 @@ Make sure to read this Wiki article about [Identifying the Energy Socket in the 
 
 ## Troubleshooting
 
-After enabling the plugin, the plugin will automatically discover the Energy Sockets in your network that have the "Local API" setting enabled using Multicast DNS. Multicast DNS is a feature of all routers. So unless you have changed these settings specifically, or using multiple different LAN networks, there should be no need to change any settings for this. It should just work.
+By default the plugin will automatically discover the Energy Sockets in your network that have the "Local API" setting enabled using Multicast DNS. Multicast DNS is a feature of all routers. So unless you have changed these settings specifically, or using multiple different LAN networks, there should be no need to change any settings for this. It should just work.
 
 More on this in the [HomeWizard API documentation about Discovery](https://homewizard-energy-api.readthedocs.io/discovery.html).
 
