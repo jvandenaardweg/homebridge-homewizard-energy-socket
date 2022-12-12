@@ -3,7 +3,7 @@ import { loggerMock } from '../mocks/logger';
 import { mockBasicInformationResponse } from './mocks/data/basic';
 import { mockStateResponse } from './mocks/data/state';
 import { mockIdentifyResponse } from './mocks/data/identify';
-import { mockApiPath, mockApiUrl, mockSerialNumber } from './mocks';
+import { mockApiPath, mockApiUrl, mockSerialNumber } from './mocks/api';
 import { Interceptable, MockAgent, setGlobalDispatcher } from 'undici';
 import { HomeWizardApiStateResponse } from './types';
 

@@ -11,7 +11,7 @@ import {
 import { Bonjour, Service as BonjourService } from 'bonjour-service';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from '@/settings';
-import { EnergySocketAccessory } from '@/energySocketAccessory';
+import { EnergySocketAccessory } from '@/energy-socket-accessory';
 import {
   EnergySocketAccessoryProperties,
   HomeWizardDeviceTypes,

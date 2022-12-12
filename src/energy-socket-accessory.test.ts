@@ -1,6 +1,6 @@
-import { EnergySocketAccessory } from './energySocketAccessory';
+import { EnergySocketAccessory } from './energy-socket-accessory';
 import { Interceptable, MockAgent, setGlobalDispatcher } from 'undici';
-import { mockApiPath, mockApiUrl, mockFirmwareVersion, mockSerialNumber } from './api/mocks';
+import { mockApiPath, mockApiUrl, mockFirmwareVersion, mockSerialNumber } from './api/mocks/api';
 import { mockIdentifyResponse } from './api/mocks/data/identify';
 import { mockBasicInformationResponse } from './api/mocks/data/basic';
 import { accessoryMock, platformMock } from './mocks/platform';

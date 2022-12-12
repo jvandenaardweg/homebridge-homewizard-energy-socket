@@ -1,8 +1,9 @@
-import { mockEnergySocketProperties, mockFirmwareVersion, mockUUID } from '@/api/mocks';
+import { mockFirmwareVersion } from '@/api/mocks/api';
 import { HomeWizardEnergyPlatformAccessoryContext } from '@/api/types';
 import { HomebridgeHomeWizardEnergySocket } from '@/platform';
 import { Accessory } from 'hap-nodejs';
 import { PlatformAccessory } from 'homebridge';
+import { mockUUID, mockAccessoryContext, mockDisplayName } from './energy-socket-accessory';
 import { loggerMock } from './logger';
 
 // export const mockSetCharacteristics = vi.fn((category, value) => {
@@ -90,7 +91,7 @@ export const platformMock = {
 
 export const accessoryMock = {
   context: {
-    energySocket: mockEnergySocketProperties,
+    energySocket: mockAccessoryContext,
   },
   getService: getServiceMock,
   addService: addServiceMock,
@@ -98,7 +99,7 @@ export const accessoryMock = {
   on: vi.fn(),
   emit: vi.fn(),
   removeService: vi.fn(),
-  displayName: mockEnergySocketProperties.displayName,
+  displayName: mockDisplayName,
   UUID: mockUUID,
   _associatedHAPAccessory: {} as Accessory,
   category: '' as any,
