@@ -20,7 +20,7 @@ This plugin does not provide a way to show the current power consumption of the 
 
 ## Getting started
 
-For Homebridge to communicate with your Energy Sockets, it is required to enable the "Local API" setting and disable the "Switch lock" setting from within the HomeWizard [Energy App](https://apps.apple.com/app/homewizard-energy/id1492427207). You must do this for each Energy Socket you want to expose in the Home App. It is also advised to assign fixed/static IP addresses to each Energy Socket in your network to improve reliability.
+For Homebridge to communicate with your Energy Sockets, it is required to enable the "Local API" setting and disable the "Switch lock" setting from within the HomeWizard [Energy App](https://apps.apple.com/app/homewizard-energy/id1492427207). You must do this for each Energy Socket you want to expose in the Home App. It is also advised to use DHCP Reservations for each Energy Socket in your network to improve reliability.
 
 ### 1. Enabling the Local API setting and disable the Switch lock setting
 
@@ -37,7 +37,7 @@ More on this on the HomeWizard support page: [Integrating Energy with other syst
 This package is published on NPM, so available on the Homebridge plugin page
 
 1. Go to your Homebridge UI and click on "Plugins"
-2. Search for `HomeWizard Energy` and select the plugin `Homebridge HomeWizard Energy Socket` from `@jvandenaardweg` and click "Install"
+2. Search for `homebridge-homewizard-energy-socket` and select the plugin `Homebridge HomeWizard Energy Socket` from `@jvandenaardweg` and click "Install"
 3. On the plugin Settings, set the name you want to use for this plugin, or leave it empty to use the default. Click Save.
 4. Click the little QR code icon for the plugin and enable the bridge. Save it and restart Homebridge.
 5. After restarting Homebridge, click the QR code icon again and scan the QR code with your iPhone using the Home App. This will add the plugin bridge to your Home App.
