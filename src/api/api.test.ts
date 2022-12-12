@@ -294,4 +294,17 @@ describe('HomeWizardApi', () => {
 
     expect(data).toStrictEqual(mockP1MeterDataResponse);
   });
+
+  it('should throw an error when the productType parameter has an unsupported product type', async () => {
+    const homeWizardApi = newApi();
+
+    const dataFn = () =>
+      homeWizardApi.getData(
+        HomeWizardDeviceTypes.WIFI_KWH_METER_PHASE_1 as HomeWizardDeviceTypes.WIFI_ENERGY_SOCKET,
+      );
+
+    expect(dataFn).rejects.toThrowError(
+      'Product type "SDM230-wifi" is not supported for this API call.',
+    );
+  });
 });
