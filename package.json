@@ -31,10 +31,7 @@
     "release": "dotenv npx release-it",
     "type-check": "tsc --noEmit",
     "prepare": "is-ci || husky install",
-    "lint-staged": "lint-staged",
-    "generate-changelog": "npx auto-changelog --commit-limit false --unreleased --template https://raw.githubusercontent.com/release-it/release-it/master/templates/changelog-compact.hbs",
-    "generate-changelog:preview": "npm run generate-changelog -- --stdout",
-    "generate-changelog:publish": "npm run generate-changelog -- -p"
+    "lint-staged": "lint-staged"
   },
   "keywords": [
     "homebridge-plugin",
@@ -73,10 +70,10 @@
   "release-it": {
     "git": {
       "commitMessage": "chore: release v${version}",
-      "changelog": "npm run generate-changelog:preview"
+      "changelog": "npx auto-changelog --stdout --commit-limit false --unreleased --template https://raw.githubusercontent.com/release-it/release-it/master/templates/changelog-compact.hbs"
     },
     "hooks": {
-      "after:bump": "npm run generate-changelog:publish"
+      "after:bump": "npx auto-changelog -p"
     },
     "npm": {
       "publish": false
