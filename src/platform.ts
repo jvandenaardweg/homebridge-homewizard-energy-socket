@@ -350,7 +350,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
 
       const firmwareVersion = basicInformation.firmware_version;
       const productName = basicInformation.product_name;
-      const productType = basicInformation.product_type;
+      const productType = basicInformation.product_type as HomeWizardDeviceTypes; // TODO: check for valid product type
       const serialNumber = basicInformation.serial;
       const apiVersion = basicInformation.api_version;
 

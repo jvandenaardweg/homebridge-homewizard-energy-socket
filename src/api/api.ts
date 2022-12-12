@@ -244,12 +244,15 @@ export class HomeWizardApi {
    */
   async getData<T extends EnergySocketDataResponse>(
     productType: HomeWizardDeviceTypes.WIFI_ENERGY_SOCKET,
+    disableLogs?: boolean,
   ): Promise<T>;
   async getData<T extends P1MeterDataResponse>(
     productType: HomeWizardDeviceTypes.WIFI_PI_METER,
+    disableLogs?: boolean,
   ): Promise<T>;
   async getData<T extends EnergySocketDataResponse | P1MeterDataResponse>(
     productType: HomeWizardDeviceTypes.WIFI_PI_METER | HomeWizardDeviceTypes.WIFI_ENERGY_SOCKET,
+    disableLogs?: boolean,
   ): Promise<T> {
     if (
       productType !== HomeWizardDeviceTypes.WIFI_PI_METER &&
@@ -262,7 +265,9 @@ export class HomeWizardApi {
 
     const url = this.endpoints.data;
 
-    this.log.debug(this.loggerPrefix, `Fetching the data at ${url}`);
+    if (!disableLogs) {
+      this.log.debug(this.loggerPrefix, `Fetching the data at ${url}`);
+    }
 
     const method = 'GET';
     const response = await request(url, {
@@ -275,7 +280,9 @@ export class HomeWizardApi {
 
     const data = (await response.body.json()) as T;
 
-    this.log.debug(this.loggerPrefix, `Fetched data: ${JSON.stringify(data)}`);
+    if (!disableLogs) {
+      this.log.debug(this.loggerPrefix, `Fetched data: ${JSON.stringify(data)}`);
+    }
 
     return data;
   }

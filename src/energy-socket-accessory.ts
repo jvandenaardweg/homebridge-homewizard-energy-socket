@@ -11,9 +11,14 @@ import {
   EnergySocketAccessoryProperties,
   HomeWizardApiIdentifyResponse,
   HomeWizardApiStateResponse,
+  HomeWizardDeviceTypes,
   HomeWizardEnergyPlatformAccessoryContext,
   PLATFORM_MANUFACTURER,
 } from '@/api/types';
+
+const POWER_USAGE_THRESHOLD = 5;
+const POLLING_INTERVAL = 3000; // in ms
+const SHOW_POLLING_ERRORS_INTERVAL = (15 * 60 * 1000) / POLLING_INTERVAL; // Show error every 15 minutes, if we poll every 3 seconds that's every 300 errors
 
 /**
  * Platform Accessory
@@ -27,6 +32,7 @@ export class EnergySocketAccessory {
   private loggerPrefix: string;
   private homeWizardApi: HomeWizardApi;
   private localStateResponse: HomeWizardApiStateResponse | undefined;
+  longPollErrorCount = 0;
 
   constructor(
     private readonly platform: HomebridgeHomeWizardEnergySocket,
@@ -80,7 +86,10 @@ export class EnergySocketAccessory {
 
     // Set the service name, this is what is displayed as the default name on the Home app
     this.service.setCharacteristic(this.platform.Characteristic.Name, properties.displayName);
-    this.service.setCharacteristic(this.platform.Characteristic.OutletInUse, true);
+
+    // We update this characteristic by polling the /data endpoint
+    // So we set it to false by default, because we don't know the current state yet
+    this.service.setCharacteristic(this.platform.Characteristic.OutletInUse, false);
 
     // Register handlers for the On/Off Characteristic
     this.service
@@ -90,6 +99,76 @@ export class EnergySocketAccessory {
 
     // Listen for the "identify" event for this Accessory
     this.accessory.on(PlatformAccessoryEvent.IDENTIFY, this.handleIdentify.bind(this));
+
+    // Start long polling the /data endpoint to get the current power usage
+    this.longPollData();
+  }
+
+  async longPollData() {
+    if (this.properties.productType !== HomeWizardDeviceTypes.WIFI_ENERGY_SOCKET) {
+      return;
+    }
+
+    try {
+      // Get the current state of the device
+      // We need to pass true as the second argument to disable logging, to not flood the Homebridge logs
+      // We'll only log errors here
+      const energySocketData = await this.homeWizardApi.getData(this.properties.productType, true);
+
+      const outletInUse = this.service.getCharacteristic(
+        this.platform.Characteristic.OutletInUse,
+      ).value;
+
+      const isThresholdMet =
+        energySocketData.active_power_w && energySocketData.active_power_w > POWER_USAGE_THRESHOLD;
+
+      // console.log(
+      //   'active_power_w',
+      //   this.properties.displayName,
+      //   energySocketData.active_power_w,
+      //   'outletInUse?',
+      //   outletInUse,
+      // );
+
+      if (isThresholdMet && !outletInUse) {
+        // If threshold is met, set to true
+        // And only set to true if it's not already true
+        this.service.setCharacteristic(this.platform.Characteristic.OutletInUse, true);
+      } else if (!isThresholdMet && outletInUse) {
+        // If threshold is not met, set to false
+        // And only set to false if it's not already false
+        this.service.setCharacteristic(this.platform.Characteristic.OutletInUse, false);
+      }
+
+      this.longPollErrorCount = 0;
+
+      // Always run the setTimeout after above logic
+      setTimeout(this.longPollData.bind(this), POLLING_INTERVAL);
+    } catch (error) {
+      let errorMessage = 'A unknown error happened while polling the /data endpoint.';
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      // If error threshold is met, show an error
+      if (this.longPollErrorCount > SHOW_POLLING_ERRORS_INTERVAL) {
+        this.platform.log.error(
+          this.loggerPrefix,
+          'Error during polling the data endpoint',
+          errorMessage,
+        );
+
+        // Reset the counter after showing the error
+        this.longPollErrorCount = 0;
+      } else {
+        // Continue counting
+        this.longPollErrorCount += 1;
+      }
+
+      // Continue polling, device is probably offline, maybe it will come back online
+      setTimeout(this.longPollData.bind(this), POLLING_INTERVAL);
+    }
   }
 
   /**
