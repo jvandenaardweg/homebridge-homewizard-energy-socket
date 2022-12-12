@@ -56,7 +56,7 @@ export interface EnergySocketAccessoryProperties {
   /** The product name of this device. Example: `"Energy Socket"` */
   productName: string;
   /** A device type identifier. Example: `"HWE-SKT"` */
-  productType: string;
+  productType: HomeWizardDeviceTypes;
   /** The name we display to the user during first setup in the Home App, like: `"Energy Socket 3c12e7659852"` */
   displayName: string;
   firmwareVersion: string;
