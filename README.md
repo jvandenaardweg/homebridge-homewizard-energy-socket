@@ -57,4 +57,4 @@ If no Energy Sockets could be found, maybe this could help:
 - Verify if the Energy Sockets have the "Local API" setting enabled
 - Restart the Energy Sockets (unplug and plug them back in)
 - Restart the Homebridge plugin and/or server
-- If none of the above help, there probably is an issue with Multicast DNS in your network. Check your network settings and/or router settings to enable Multicast DNS.
+- If none of the above help, there probably is an issue with Multicast DNS in your network. Check your network settings and/or router settings to enable Multicast DNS. Or use the Energy Sockets config option for the plugin to manually add your Energy Sockets by using the IP address.
