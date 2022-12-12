@@ -3,12 +3,14 @@ import { loggerMock } from '../mocks/logger';
 import { mockBasicInformationResponse } from './mocks/data/basic';
 import { mockStateResponse } from './mocks/data/state';
 import { mockIdentifyResponse } from './mocks/data/identify';
-import { mockApiPath, mockApiUrl, mockSerialNumber } from './mocks/api';
+import { mockApiUrl } from './mocks/api';
 import { Interceptable, MockAgent, setGlobalDispatcher } from 'undici';
 import { HomeWizardApiStateResponse } from './types';
 
 const newApi = () => {
-  return new HomeWizardApi(mockApiUrl, mockApiPath, mockSerialNumber, loggerMock);
+  return new HomeWizardApi(mockApiUrl, {
+    logger: loggerMock,
+  });
 };
 
 let mockApiAgent: MockAgent;
@@ -95,7 +97,7 @@ describe('HomeWizardApi', () => {
   it('should GET the "state" endpoint', async () => {
     mockApiPool
       .intercept({
-        path: `${mockApiPath}/state`,
+        path: `/api/v1/state`,
         method: 'GET',
       })
       .reply(() => ({
@@ -112,7 +114,7 @@ describe('HomeWizardApi', () => {
   it('should throw an error when GET the "state" endpoint returns a server error', async () => {
     mockApiPool
       .intercept({
-        path: `${mockApiPath}/state`,
+        path: `/api/v1/state`,
         method: 'GET',
       })
       .reply(() => ({
@@ -131,7 +133,7 @@ describe('HomeWizardApi', () => {
   it('should PUT the "state" endpoint', async () => {
     mockApiPool
       .intercept({
-        path: `${mockApiPath}/state`,
+        path: `/api/v1/state`,
         method: 'PUT',
       })
       .reply(({ body }) => {
@@ -167,7 +169,7 @@ describe('HomeWizardApi', () => {
   it('should throw an error on PUT when the "state" endpoint returns a server error', async () => {
     mockApiPool
       .intercept({
-        path: `${mockApiPath}/state`,
+        path: `/api/v1/state`,
         method: 'PUT',
       })
       .reply(() => ({
@@ -190,7 +192,7 @@ describe('HomeWizardApi', () => {
   it('should PUT the "identify" endpoint', async () => {
     mockApiPool
       .intercept({
-        path: `${mockApiPath}/identify`,
+        path: `/api/v1/identify`,
         method: 'PUT',
       })
       .reply(() => ({
@@ -209,7 +211,7 @@ describe('HomeWizardApi', () => {
   it('should throw an error when PUT the "identify" endpoint returns a server error', async () => {
     mockApiPool
       .intercept({
-        path: `${mockApiPath}/identify`,
+        path: `/api/v1/identify`,
         method: 'PUT',
       })
       .reply(() => ({

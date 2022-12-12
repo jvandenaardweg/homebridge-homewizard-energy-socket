@@ -14,6 +14,7 @@ const request = (...args: RequestArgs) =>
   undiciRequest(args[0], {
     ...args[1],
     bodyTimeout: 2000, // 2 seconds, we are on a local network, so all request should be fast
+    headersTimeout: 2000,
   });
 
 export class HomeWizardApiError extends Error {
@@ -21,6 +22,11 @@ export class HomeWizardApiError extends Error {
     super(message);
     this.name = 'HomeWizardApiError';
   }
+}
+
+interface HomeWizardApiOptions {
+  apiVersion?: 'v1';
+  logger: Logger;
 }
 
 /**
@@ -31,29 +37,27 @@ export class HomeWizardApiError extends Error {
 export class HomeWizardApi {
   private readonly log: Logger;
   private readonly url: string;
-  private readonly path: string;
-  private readonly serialNumber: string;
+  private apiVersion: 'v1' | undefined;
 
-  constructor(url: string, path: string, serialNumber: string, logger: Logger) {
-    this.log = logger;
+  constructor(url: string, options: HomeWizardApiOptions) {
+    this.log = options.logger;
 
     this.url = url;
-    this.path = path;
-    this.serialNumber = serialNumber;
+    this.apiVersion = options.apiVersion || 'v1';
   }
 
   get endpoints() {
-    const { url, path } = this;
+    const { url } = this;
 
     return {
       basic: `${url}/api`,
-      state: `${url}${path}/state`,
-      identify: `${url}${path}/identify`,
+      state: `${url}/api/${this.apiVersion}/state`,
+      identify: `${url}/api/${this.apiVersion}/identify`,
     };
   }
 
   get loggerPrefix(): string {
-    return `[Api] -> ${this.url} (${this.serialNumber}) -> `;
+    return `[Api] -> ${this.url} -> `;
   }
 
   isResponseOk(response: Dispatcher.ResponseData): boolean {

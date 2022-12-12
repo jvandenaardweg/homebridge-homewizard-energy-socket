@@ -32,45 +32,45 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
   public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
 
-  public readonly cachedAccessories: PlatformAccessory[] = [];
+  public cachedAccessories: PlatformAccessory<HomeWizardEnergyPlatformAccessoryContext>[] = [];
 
   private config: HomeWizardEnergyConfig;
 
-  private bonjour: Bonjour;
+  private bonjour: Bonjour | null = null;
 
   private loggerPrefix: string;
 
-  private interval: ReturnType<typeof setInterval> | null = null;
-
   constructor(public readonly log: Logger, config: PlatformConfig, public readonly api: API) {
-    const loggerPrefix = `Platform Setup -> `;
+    const loggerPrefix = `[Platform Setup] -> `;
     this.loggerPrefix = loggerPrefix;
 
     this.config = config as HomeWizardEnergyConfig;
-
-    this.bonjour = new Bonjour();
 
     this.log.debug(loggerPrefix, 'Finished initializing platform:', config.name);
 
     // When this event is fired it means Homebridge has restored all cached accessories from disk.
     // Dynamic Platform plugins should only register new accessories after this event was fired,
-    // in order to ensure they weren`t added to homebridge already. This event can also be used
+    // in order to ensure they were not added to homebridge already. This event can also be used
     // to start discovery of new accessories.
     this.api.on(APIEvent.DID_FINISH_LAUNCHING, () => {
-      log.debug(loggerPrefix, 'Executed didFinishLaunching callback');
-      // run the method to discover / register your devices as accessories
-      this.discoverDevices();
+      this.log.debug(loggerPrefix, 'Executed didFinishLaunching callback');
+
+      // Automatically discover Energy Sockets if no Energy Sockets are configured
+      if (!this.config.energySockets?.length) {
+        this.startDiscoveringDevices();
+
+        return;
+      }
+
+      // When we end up here, there are Energy Sockets found in the config, so we skip automatic discovery
+
+      this.handleEnergySocketsFromConfig();
     });
 
     // On Homebridge shutdown, cleanup some things
     // Note: this is not called when our plugin is uninstalled
-    // TODO: handle uninstall/restart of plugin due to intervals and watchers
     this.api.on(APIEvent.SHUTDOWN, () => {
-      this.bonjour.destroy();
-
-      if (this.interval) {
-        clearInterval(this.interval);
-      }
+      this.stopDiscoveringDevices();
     });
   }
 
@@ -79,13 +79,43 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
    * It should be used to setup event handlers for characteristics and update respective values.
    */
   configureAccessory(accessory: PlatformAccessory<HomeWizardEnergyPlatformAccessoryContext>): void {
-    this.log.info(
-      this.loggerPrefix,
-      `Loading accessory from cache: ${accessory.displayName} ${accessory.context.energySocket.hostname}`,
-    );
+    this.log.debug(this.loggerPrefix, `Loading accessory from cache: ${accessory.displayName}`);
 
-    // add the restored accessory to the accessories cache so we can track if it has already been registered
     this.cachedAccessories.push(accessory);
+  }
+
+  /**
+   * An accessory is stale if it is not present in the config anymore, but is found in the cache.
+   *
+   * We should remove the accessory from the bridge if it's considered stale.
+   */
+  isStaleCachedAccessory(
+    cachedAccessory: PlatformAccessory<HomeWizardEnergyPlatformAccessoryContext>,
+    energySocketsConfig: HomeWizardEnergyConfig['energySockets'],
+  ): boolean {
+    if (!energySocketsConfig) return false;
+
+    const configIps = energySocketsConfig.map(energySocket => energySocket.ip);
+
+    const accessoryIp = cachedAccessory.context.energySocket.ip;
+
+    const isIpStillInConfig = configIps.includes(accessoryIp);
+
+    // It is stale if the IP is not present in the config anymore
+    return !isIpStillInConfig;
+  }
+
+  stopDiscoveringDevices(): void {
+    if (this.bonjour) {
+      this.log.info(
+        this.loggerPrefix,
+        'Stopping automatic discovering Energy Sockets in your network...',
+      );
+
+      this.bonjour.destroy();
+
+      this.bonjour = null;
+    }
   }
 
   /**
@@ -93,17 +123,10 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
    * Accessories must only be registered once, previously created accessories
    * must not be registered again to prevent "duplicate UUID" errors.
    */
-  discoverDevices(): void {
-    if (this.interval) {
-      clearInterval(this.interval);
-    }
+  startDiscoveringDevices(): void {
+    this.log.info(this.loggerPrefix, 'Automatically discovering Energy Sockets in your network...');
 
-    // const SCAN_INTERVAL_IN_MINUTES = 0.1;
-
-    this.log.info(this.loggerPrefix, 'Finding HomeWizard devices in your network...');
-
-    // TODO: handle device ip changes
-    // TODO: handle device down
+    this.bonjour = new Bonjour();
 
     const browser = this.bonjour.find({
       protocol: MDNS_DISCOVERY_PROTOCOL,
@@ -122,16 +145,6 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     browser.on('error', (error: Error) => {
       this.log.error(this.loggerPrefix, `Error while discovering devices: ${error.message}`);
     });
-
-    // Broadcast the find query again every 15 minutes
-    // so if devices change ip addresses, we can find them again
-    // this.interval = setInterval(() => {
-    //   this.log.info(
-    //     this.loggerPrefix,
-    //     `Scanning for updates on HomeWizard devices in your network... (${SCAN_INTERVAL_IN_MINUTES} minutes interval)`
-    //   );
-    //   browser.start();
-    // }, SCAN_INTERVAL_IN_MINUTES * 60 * 1000);
   }
 
   isDeviceApiEnabled(txtRecord: TxtRecord): boolean {
@@ -145,21 +158,21 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
   async handleDiscoveredService(service: BonjourService): Promise<void> {
     const txtRecord = service.txt as TxtRecord;
 
-    // Skip if the device has not enabled the "Local API" setting
-    if (!this.isDeviceApiEnabled(txtRecord)) {
-      this.log.info(
-        this.loggerPrefix,
-        `Found a Energy Socket, but it has not enabled the "Local Api" setting, skipping`,
-        JSON.stringify(txtRecord),
-      );
-      return;
-    }
-
     // Skip if the device is not an Energy Socket
     if (!this.isDeviceProductTypeSupported(txtRecord)) {
       this.log.info(
         this.loggerPrefix,
         `Found a device that is not an Energy Socket (${HomeWizardDeviceTypes.WIFI_ENERGY_SOCKET}), skipping`,
+        JSON.stringify(txtRecord),
+      );
+      return;
+    }
+
+    // Skip if the device has not enabled the "Local API" setting
+    if (!this.isDeviceApiEnabled(txtRecord)) {
+      this.log.info(
+        this.loggerPrefix,
+        `Found a Energy Socket, but it has not enabled the "Local Api" setting, skipping`,
         JSON.stringify(txtRecord),
       );
       return;
@@ -171,6 +184,77 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
         service,
       );
 
+      this.addAccessory(energySocketProperties, api);
+    } catch (error) {
+      this.log.error(
+        this.loggerPrefix,
+        `Error while handling discovered service: ${JSON.stringify(error)}`,
+      );
+    }
+  }
+
+  async handleEnergySocketsFromConfig(): Promise<void> {
+    if (!this.config.energySockets || !this.config.energySockets.length) {
+      this.log.error(
+        this.loggerPrefix,
+        `handleEnergySocketsFromConfig is invoked, but config.energySockets has no array items. We are stopping.`,
+      );
+
+      return;
+    }
+
+    this.log.debug(
+      this.loggerPrefix,
+      `Found ${this.config.energySockets.length} Energy Sockets in config, skipping automatic discovery...`,
+    );
+
+    // First, check if there are accessories in the cache that do not exist anymore in the config
+    // We should remove these
+    const staleCachedAccessories = this.cachedAccessories.filter(accessory => {
+      return this.isStaleCachedAccessory(accessory, this.config.energySockets);
+    });
+
+    if (staleCachedAccessories.length) {
+      this.log.debug(
+        this.loggerPrefix,
+        `Found ${staleCachedAccessories.length} stale cached accessories. We will remove them...`,
+      );
+
+      for (const staleCachedAccessory of staleCachedAccessories) {
+        this.log.info(
+          this.loggerPrefix,
+          `Removing stale cached accessory: ${staleCachedAccessory.displayName} (${staleCachedAccessory.UUID})`,
+        );
+
+        this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [staleCachedAccessory]);
+
+        const updatedCachedAccessories = this.cachedAccessories.filter(
+          accessory => accessory.UUID !== staleCachedAccessory.UUID,
+        );
+
+        this.cachedAccessories = [...updatedCachedAccessories];
+      }
+    }
+
+    for (const energySocket of this.config.energySockets) {
+      try {
+        const { energySocketProperties, api } = await this.getEnergySocketPropertiesFromIp(
+          energySocket.ip,
+          energySocket.name,
+        );
+
+        this.addAccessory(energySocketProperties, api);
+      } catch (error) {
+        this.log.error(
+          this.loggerPrefix,
+          `Error while handling energy socket from config: ${JSON.stringify(error)}`,
+        );
+      }
+    }
+  }
+
+  addAccessory(energySocketProperties: EnergySocketAccessoryProperties, api: HomeWizardApi) {
+    try {
       const existingAccessory = this.cachedAccessories.find(
         accessory => accessory.UUID === energySocketProperties.uuid,
       ) as PlatformAccessory<HomeWizardEnergyPlatformAccessoryContext>;
@@ -206,6 +290,8 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
         return;
       }
 
+      // When we end up here, accessory is found in cache
+
       // The accessory already exists, so we can restore it from our cache
       this.log.info(
         this.loggerPrefix,
@@ -218,15 +304,10 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
 
       // Create the accessory handler for the restored accessory
       this.attachAccessoryToPlatform(existingAccessory, api);
-
-      // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
-      // remove platform accessories when no longer present
-      // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [existingAccessory]);
-      // this.log.info(this.loggerPrefix,'Removing existing accessory from cache:', existingAccessory.displayName);
     } catch (error) {
       this.log.error(
         this.loggerPrefix,
-        `Error while handling discovered service: ${JSON.stringify(error)}`,
+        `Error while adding the accessory: ${JSON.stringify(error)}`,
       );
     }
   }
@@ -241,55 +322,49 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     new EnergySocketAccessory(this, accessory, api);
   }
 
-  /**
-   * Method to extract relevant accessory information from a Bonjour service
-   */
-  async getEnergySocketPropertiesFromService(service: BonjourService): Promise<{
+  async getEnergySocketPropertiesFromIp(
+    ip: string,
+    configName?: string,
+  ): Promise<{
     energySocketProperties: EnergySocketAccessoryProperties;
     api: HomeWizardApi;
   }> {
-    const txtRecord = service.txt as TxtRecord;
-
-    this.log.debug(
+    this.log.info(
       this.loggerPrefix,
-      `Received data from Bonjour service: ${JSON.stringify(service)}`,
+      `Using IP ${ip} to find information about the Energy Socket...`,
     );
-
-    const hostname = service.host; // Example: energysocket-220852.local
-
-    const serialNumber = txtRecord.serial;
-    const path = txtRecord.path;
-    const productName = txtRecord.product_name;
-    const productType = txtRecord.product_type;
-    const ip = service.addresses?.[0] as string; // get the first address
-    const port = service.port; // 80
-    const displayName = `${productName} ${serialNumber}`; // "Energy Socket 3c12e7659852", which is used as the name in HomeKit
-
-    // generate a unique id for the accessory this should be generated from
-    // something globally unique, but constant, for example, the device serial
-    // number or MAC address
-    const uuid = this.api.hap.uuid.generate(serialNumber);
 
     // do not use hostname, because its too slow for Homekit, because it will need to resolve the hostname to an IP address first,
     // the lookup is blocking nodejs I/O, so it can take longer than homekit and homebridge likes
     // apiUrl: `http://${hostname}:${port}`,
-    const apiUrl = `http://${ip}:${port}`;
-
-    const api = new HomeWizardApi(apiUrl, path, serialNumber, this.log);
+    const apiUrl = `http://${ip}`;
 
     try {
+      const api = new HomeWizardApi(apiUrl, {
+        logger: this.log,
+      });
+
       // Call the basic endpoint to get the firmware version
       // this is not available in the txt record, but required for our accessory
       const basicInformation = await api.getBasicInformation();
 
       const firmwareVersion = basicInformation.firmware_version;
+      const productName = basicInformation.product_name;
+      const productType = basicInformation.product_type;
+      const serialNumber = basicInformation.serial;
+      const apiVersion = basicInformation.api_version;
+
+      // generate a unique id for the accessory this should be generated from
+      // something globally unique, but constant, for example, the device serial
+      // number or MAC address
+      const uuid = this.api.hap.uuid.generate(serialNumber);
+
+      const displayName = configName ? configName : `${productName} ${serialNumber}`; // "Energy Socket 3c12e7659852", which is used as the name in HomeKit
 
       const energySocketProperties = {
         uuid,
         ip,
-        port,
-        hostname,
-        path,
+        apiVersion,
         apiUrl,
         serialNumber: serialNumber,
         productName,
@@ -311,6 +386,34 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
       );
 
       return { energySocketProperties, api };
+    } catch (error) {
+      const errorMessage = `Could not get basic information from the Energy Socket, skipping: ${JSON.stringify(
+        error,
+      )}`;
+      this.log.error(this.loggerPrefix, errorMessage);
+
+      throw new Error(errorMessage);
+    }
+  }
+
+  /**
+   * Method to extract relevant accessory information from a Bonjour service
+   */
+  async getEnergySocketPropertiesFromService(service: BonjourService): Promise<{
+    energySocketProperties: EnergySocketAccessoryProperties;
+    api: HomeWizardApi;
+  }> {
+    this.log.debug(
+      this.loggerPrefix,
+      `Received data from Bonjour service: ${JSON.stringify(service)}`,
+    );
+
+    const ip = service.addresses?.[0] as string; // get the first address
+
+    try {
+      const energySocketProperties = await this.getEnergySocketPropertiesFromIp(ip);
+
+      return energySocketProperties;
     } catch (error) {
       const errorMessage = `Could not get basic information from the Energy Socket, skipping: ${JSON.stringify(
         error,

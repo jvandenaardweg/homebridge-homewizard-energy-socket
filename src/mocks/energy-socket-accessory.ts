@@ -1,9 +1,7 @@
 import {
-  mockApiPath,
   mockApiUrl,
+  mockApiVersion,
   mockFirmwareVersion,
-  mockHostname,
-  mockPort,
   mockProductName,
   mockProductType,
   mockSerialNumber,
@@ -16,14 +14,12 @@ export const mockUUID = hap.uuid.generate(mockSerialNumber);
 
 export const mockAccessoryContext = {
   ip: 'localhost', // use localhost instead of ip for mocking the endpoint
-  port: mockPort,
-  path: mockApiPath,
   serialNumber: mockSerialNumber,
   displayName: mockDisplayName,
   productType: mockProductType,
   productName: mockProductName,
   apiUrl: mockApiUrl,
-  hostname: mockHostname, // energy-socket-123456
   uuid: mockUUID,
   firmwareVersion: mockFirmwareVersion,
+  apiVersion: mockApiVersion,
 } satisfies EnergySocketAccessoryProperties;

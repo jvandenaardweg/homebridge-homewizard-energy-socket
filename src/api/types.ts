@@ -44,13 +44,13 @@ export interface EnergySocketAccessoryProperties {
   /** Accessory UUID, used to identify the accessory within HomeBridge. This uuid is generated from the `id` and `serialNumber`, which are the same. */
   uuid: string;
   /** Hostname of the device. Example: `"energysocket-185952.local"` */
-  hostname: string;
+  // hostname: string;
   /** The IP address of the device. Example: `"192.168.1.20"` */
   ip: string;
   /** The port at which the API of this device is running. Example: 80 */
-  port: number;
-  /** The path to the API. Example: `"/api/v1"` */
-  path: string;
+  // port: number;
+  /** The version of the API. Example: `"v1"` */
+  apiVersion: string;
   /** The API url of this device, without trailing slash. Example: "`http://192.168.1.20`" */
   apiUrl: string;
   /** The serial number of the device. Example: `"3c12e7659852"`. This is also a the Mac address of the device. */
@@ -68,7 +68,10 @@ export interface EnergySocketAccessoryProperties {
  * See config.schema.json for the configuration options.
  */
 export interface HomeWizardEnergyConfig extends PlatformConfig {
-  name: string;
+  energySockets?: {
+    name: string;
+    ip: string;
+  }[];
 }
 
 /**

@@ -37,7 +37,7 @@ export class EnergySocketAccessory {
 
     this.properties = properties;
 
-    const loggerPrefix = `${properties.hostname} (${properties.serialNumber}) -> `;
+    const loggerPrefix = `[Energy Socket: ${properties.displayName}] -> `;
 
     this.loggerPrefix = loggerPrefix;
 
