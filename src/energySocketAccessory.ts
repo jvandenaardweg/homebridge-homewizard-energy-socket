@@ -9,7 +9,6 @@ import { HomeWizardApi } from '@/api/api';
 import { HomebridgeHomeWizardEnergySocket } from '@/platform';
 import {
   EnergySocketAccessoryProperties,
-  HomeWizardApiBasicInformationResponse,
   HomeWizardApiIdentifyResponse,
   HomeWizardApiStateResponse,
   HomeWizardEnergyPlatformAccessoryContext,
@@ -23,6 +22,7 @@ import {
  */
 export class EnergySocketAccessory {
   private service: Service;
+  private informationService: Service | undefined;
   private properties: EnergySocketAccessoryProperties;
   private loggerPrefix: string;
   private homeWizardApi: HomeWizardApi;
@@ -31,6 +31,7 @@ export class EnergySocketAccessory {
   constructor(
     private readonly platform: HomebridgeHomeWizardEnergySocket,
     private readonly accessory: PlatformAccessory<HomeWizardEnergyPlatformAccessoryContext>,
+    api: HomeWizardApi,
   ) {
     const properties = accessory.context.energySocket;
 
@@ -48,25 +49,31 @@ export class EnergySocketAccessory {
       properties,
     );
 
-    this.homeWizardApi = new HomeWizardApi(
-      `http://${properties.ip}:${properties.port}`,
-      properties.path,
-      properties.serialNumber,
-      this.platform.log,
+    this.homeWizardApi = api;
+
+    const informationService = this.accessory.getService(
+      this.platform.Service.AccessoryInformation,
+    );
+
+    informationService?.setCharacteristic(
+      this.platform.Characteristic.Manufacturer,
+      PLATFORM_MANUFACTURER,
+    );
+    informationService?.setCharacteristic(
+      this.platform.Characteristic.Model,
+      this.getModel(properties.productName, properties.productType), // "Energy Socket (HWE-SKT"
+    );
+    informationService?.setCharacteristic(
+      this.platform.Characteristic.SerialNumber,
+      properties.serialNumber, // Like: "1c23e7280952"
+    );
+    informationService?.setCharacteristic(
+      this.platform.Characteristic.FirmwareRevision,
+      properties.firmwareVersion, // Like: "3.02"
     );
 
     // Set accessory information
-    this.accessory
-      .getService(this.platform.Service.AccessoryInformation)
-      ?.setCharacteristic(this.platform.Characteristic.Manufacturer, PLATFORM_MANUFACTURER)
-      .setCharacteristic(
-        this.platform.Characteristic.Model,
-        this.getModel(properties.productName, properties.productType), // "Energy Socket (HWE-SKT"
-      )
-      .setCharacteristic(
-        this.platform.Characteristic.SerialNumber,
-        properties.serialNumber, // Like: "1c23e7280952"
-      );
+    this.informationService = informationService;
 
     // Get the Outlet service if it exists, otherwise create a new Outlet service
     // We can create multiple services for each accessory
@@ -75,14 +82,8 @@ export class EnergySocketAccessory {
       this.accessory.addService(this.platform.Service.Outlet);
 
     // Set the service name, this is what is displayed as the default name on the Home app
-    this.service
-      .setCharacteristic(this.platform.Characteristic.Name, properties.displayName)
-      .setCharacteristic(this.platform.Characteristic.OutletInUse, true);
-
-    // Get additional characteristics async by calling the API
-    // each service must implement at-minimum the "required characteristics" for the given service type
-    // see https://developers.homebridge.io/#/service/Outlet
-    this.setAsyncCharacteristics();
+    this.service.setCharacteristic(this.platform.Characteristic.Name, properties.displayName);
+    this.service.setCharacteristic(this.platform.Characteristic.OutletInUse, true);
 
     // Register handlers for the On/Off Characteristic
     this.service
@@ -98,9 +99,9 @@ export class EnergySocketAccessory {
    * The firmware version of the device. Some API features may not work with different firmware versions.
    */
   get firmwareVersion(): number | null {
-    const firmwareVersionString = this.accessory
-      .getService(this.platform.Service.AccessoryInformation)
-      ?.getCharacteristic(this.platform.Characteristic.FirmwareRevision).value;
+    const firmwareVersionString = this.informationService?.getCharacteristic(
+      this.platform.Characteristic.FirmwareRevision,
+    ).value;
     const firmwareVersion = firmwareVersionString ? Number(firmwareVersionString) : null;
 
     return firmwareVersion;
@@ -126,30 +127,6 @@ export class EnergySocketAccessory {
 
   getModel(productName: string, productType: string): string {
     return `${productName} (${productType})`;
-  }
-
-  setAsyncCharacteristics(): void {
-    this.setAsyncFirmwareVersion();
-  }
-
-  async setAsyncFirmwareVersion(): Promise<HomeWizardApiBasicInformationResponse> {
-    try {
-      const response = await this.homeWizardApi.getBasicInformation();
-
-      // The firmware version of the device. Some API features may not work with different firmware versions.
-      // We can only get the firmware version by calling this API, we don't have it upfront
-      this.accessory.getService(this.platform.Service.AccessoryInformation)?.setCharacteristic(
-        this.platform.Characteristic.FirmwareRevision,
-        response.firmware_version, // Like: "3.02"
-      );
-
-      return response;
-    } catch (error) {
-      const fallbackErrorMessage =
-        'A unknown error occurred while setting the required characteristics';
-
-      throw this.handleAccessoryApiError(error, fallbackErrorMessage);
-    }
   }
 
   get isSwitchLockEnabled(): boolean {

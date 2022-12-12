@@ -21,6 +21,7 @@ import {
   MDNS_DISCOVERY_TYPE,
   TxtRecord,
 } from '@/api/types';
+import { HomeWizardApi } from './api';
 
 /**
  * HomebridgePlatform
@@ -141,7 +142,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     return txtRecord.product_type === HomeWizardDeviceTypes.WIFI_ENERGY_SOCKET;
   }
 
-  handleDiscoveredService(service: BonjourService): void {
+  async handleDiscoveredService(service: BonjourService): Promise<void> {
     const txtRecord = service.txt as TxtRecord;
 
     // Skip if the device has not enabled the "Local API" setting
@@ -165,66 +166,88 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     }
 
     // Service is an Energy Socket, and the Local API is enabled, so we can use it
+    try {
+      const { energySocketProperties, api } = await this.getEnergySocketPropertiesFromService(
+        service,
+      );
 
-    const energySocketProperties = this.getEnergySocketPropertiesFromService(service);
+      const existingAccessory = this.cachedAccessories.find(
+        accessory => accessory.UUID === energySocketProperties.uuid,
+      ) as PlatformAccessory<HomeWizardEnergyPlatformAccessoryContext>;
 
-    const existingAccessory = this.cachedAccessories.find(
-      accessory => accessory.UUID === energySocketProperties.uuid,
-    ) as PlatformAccessory<HomeWizardEnergyPlatformAccessoryContext>;
+      if (!existingAccessory) {
+        // The accessory does not yet exist, so we need to create it
 
-    if (!existingAccessory) {
-      // The accessory does not yet exist, so we need to create it
+        this.log.info(
+          this.loggerPrefix,
+          'Adding new accessory:',
+          energySocketProperties.displayName,
+          energySocketProperties.apiUrl,
+          energySocketProperties.uuid,
+        );
 
+        // Create a new accessory
+        const newAccessory =
+          new this.api.platformAccessory<HomeWizardEnergyPlatformAccessoryContext>(
+            energySocketProperties.displayName,
+            energySocketProperties.uuid,
+          );
+
+        // Store a copy of our `energySocketProperties` in the `accessory.context`
+        // The `context` property can be used to store any data about the accessory we need to control this device
+        newAccessory.context.energySocket = energySocketProperties;
+
+        // Create the accessory handler for the newly create accessory
+        this.attachAccessoryToPlatform(newAccessory, api);
+
+        // Link the accessory to your platform
+        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [newAccessory]);
+
+        return;
+      }
+
+      // The accessory already exists, so we can restore it from our cache
       this.log.info(
         this.loggerPrefix,
-        'Adding new accessory:',
-        energySocketProperties.displayName,
-        energySocketProperties.apiUrl,
-        energySocketProperties.uuid,
+        `Restoring existing accessory from cache: ${existingAccessory.displayName}`,
       );
 
-      // Create a new accessory
-      const newAccessory = new this.api.platformAccessory<HomeWizardEnergyPlatformAccessoryContext>(
-        energySocketProperties.displayName,
-        energySocketProperties.uuid,
+      // Update the existing accessory with the new data, for example, the IP address might have changed
+      existingAccessory.context.energySocket = energySocketProperties;
+      this.api.updatePlatformAccessories([existingAccessory]);
+
+      // Create the accessory handler for the restored accessory
+      this.attachAccessoryToPlatform(existingAccessory, api);
+
+      // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
+      // remove platform accessories when no longer present
+      // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [existingAccessory]);
+      // this.log.info(this.loggerPrefix,'Removing existing accessory from cache:', existingAccessory.displayName);
+    } catch (error) {
+      this.log.error(
+        this.loggerPrefix,
+        `Error while handling discovered service: ${JSON.stringify(error)}`,
       );
-
-      // Store a copy of our `energySocketProperties` in the `accessory.context`
-      // The `context` property can be used to store any data about the accessory we need to control this device
-      newAccessory.context.energySocket = energySocketProperties;
-
-      // Create the accessory handler for the newly create accessory
-      new EnergySocketAccessory(this, newAccessory);
-
-      // Link the accessory to your platform
-      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [newAccessory]);
-
-      return;
     }
+  }
 
-    // The accessory already exists, so we can restore it from our cache
-    this.log.info(
-      this.loggerPrefix,
-      `Restoring existing accessory from cache: ${existingAccessory.displayName}`,
-    );
-
-    // Update the existing accessory with the new data, for example, the IP address might have changed
-    existingAccessory.context.energySocket = energySocketProperties;
-    this.api.updatePlatformAccessories([existingAccessory]);
+  attachAccessoryToPlatform(
+    accessory: PlatformAccessory<HomeWizardEnergyPlatformAccessoryContext>,
+    api: HomeWizardApi,
+  ): void {
+    this.log.info(this.loggerPrefix, 'Attaching accessory to platform:', accessory.displayName);
 
     // Create the accessory handler for the restored accessory
-    new EnergySocketAccessory(this, existingAccessory);
-
-    // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
-    // remove platform accessories when no longer present
-    // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [existingAccessory]);
-    // this.log.info(this.loggerPrefix,'Removing existing accessory from cache:', existingAccessory.displayName);
+    new EnergySocketAccessory(this, accessory, api);
   }
 
   /**
    * Method to extract relevant accessory information from a Bonjour service
    */
-  getEnergySocketPropertiesFromService(service: BonjourService): EnergySocketAccessoryProperties {
+  async getEnergySocketPropertiesFromService(service: BonjourService): Promise<{
+    energySocketProperties: EnergySocketAccessoryProperties;
+    api: HomeWizardApi;
+  }> {
     const txtRecord = service.txt as TxtRecord;
 
     this.log.debug(
@@ -247,30 +270,54 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     // number or MAC address
     const uuid = this.api.hap.uuid.generate(serialNumber);
 
-    const energySocketInfo = {
-      uuid,
-      ip,
-      port,
-      hostname,
-      path,
-      // do not use hostname, because its too slow for Homekit, because it will need to resolve the hostname to an IP address first,
-      // the lookup is blocking nodejs I/O, so it can take longer than homekit and homebridge likes
-      // apiUrl: `http://${hostname}:${port}`,
-      apiUrl: `http://${ip}:${port}`,
-      serialNumber: serialNumber,
-      productName,
-      displayName,
-      productType,
-    } satisfies EnergySocketAccessoryProperties;
+    // do not use hostname, because its too slow for Homekit, because it will need to resolve the hostname to an IP address first,
+    // the lookup is blocking nodejs I/O, so it can take longer than homekit and homebridge likes
+    // apiUrl: `http://${hostname}:${port}`,
+    const apiUrl = `http://${ip}:${port}`;
 
-    this.log.debug(
-      this.loggerPrefix,
-      'Will use this info from service to setup the accessory: ',
-      JSON.stringify(energySocketInfo),
-    );
+    const api = new HomeWizardApi(apiUrl, path, serialNumber, this.log);
 
-    this.log.info(this.loggerPrefix, 'Found Energy Socket: ', JSON.stringify(energySocketInfo));
+    try {
+      // Call the basic endpoint to get the firmware version
+      // this is not available in the txt record, but required for our accessory
+      const basicInformation = await api.getBasicInformation();
 
-    return energySocketInfo;
+      const firmwareVersion = basicInformation.firmware_version;
+
+      const energySocketProperties = {
+        uuid,
+        ip,
+        port,
+        hostname,
+        path,
+        apiUrl,
+        serialNumber: serialNumber,
+        productName,
+        displayName,
+        productType,
+        firmwareVersion,
+      } satisfies EnergySocketAccessoryProperties;
+
+      this.log.debug(
+        this.loggerPrefix,
+        'Will use this info from service to setup the accessory: ',
+        JSON.stringify(energySocketProperties),
+      );
+
+      this.log.info(
+        this.loggerPrefix,
+        'Found Energy Socket: ',
+        JSON.stringify(energySocketProperties),
+      );
+
+      return { energySocketProperties, api };
+    } catch (error) {
+      const errorMessage = `Could not get basic information from the Energy Socket, skipping: ${JSON.stringify(
+        error,
+      )}`;
+      this.log.error(this.loggerPrefix, errorMessage);
+
+      throw new Error(errorMessage);
+    }
   }
 }

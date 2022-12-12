@@ -1,13 +1,9 @@
-import {
-  EnergySocketAccessoryProperties,
-  HomeWizardEnergyPlatformAccessoryContext,
-} from '@/api/types';
+import { mockEnergySocketProperties, mockFirmwareVersion, mockUUID } from '@/api/mocks';
+import { HomeWizardEnergyPlatformAccessoryContext } from '@/api/types';
 import { HomebridgeHomeWizardEnergySocket } from '@/platform';
 import { Accessory } from 'hap-nodejs';
 import { PlatformAccessory } from 'homebridge';
 import { loggerMock } from './logger';
-
-export const mockFirmwareRevision = '3.1';
 
 // export const mockSetCharacteristics = vi.fn((category, value) => {
 export const mockSetCharacteristics = vi.fn(() => {
@@ -26,7 +22,7 @@ const mockGetCharacteristics = category => {
   //   console.log('get', category);
   if (category === 'FirmwareRevision') {
     return {
-      value: mockFirmwareRevision,
+      value: mockFirmwareVersion,
     };
   }
 
@@ -94,18 +90,7 @@ export const platformMock = {
 
 export const accessoryMock = {
   context: {
-    energySocket: {
-      ip: 'localhost',
-      port: 80,
-      path: '/api/v1',
-      serialNumber: '123456',
-      displayName: 'Energy Socket 123456',
-      productType: 'HWE-SKT',
-      productName: 'Energy Socket',
-      apiUrl: 'http://localhost:80',
-      hostname: 'energy-socket-123456',
-      uuid: '123456',
-    } satisfies EnergySocketAccessoryProperties,
+    energySocket: mockEnergySocketProperties,
   },
   getService: getServiceMock,
   addService: addServiceMock,
@@ -113,8 +98,8 @@ export const accessoryMock = {
   on: vi.fn(),
   emit: vi.fn(),
   removeService: vi.fn(),
-  displayName: 'Energy Socket 123456',
-  UUID: 'UUID',
+  displayName: mockEnergySocketProperties.displayName,
+  UUID: mockUUID,
   _associatedHAPAccessory: {} as Accessory,
   category: '' as any,
   reachable: true,
