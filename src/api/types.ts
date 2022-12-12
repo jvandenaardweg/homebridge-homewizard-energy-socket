@@ -101,6 +101,78 @@ export interface HomeWizardApiBasicInformationResponse {
   /** The current api version, currently ‘v1’ */
   api_version: string;
 }
+/**
+ * The /api/v1/data endpoint allows you to get the most recent measurement from the device.
+ *
+ * This response type only relates to the Energy Socket.
+ *
+ * @link: https://homewizard-energy-api.readthedocs.io/endpoints.html#recent-measurement-api-v1-data
+ */
+export interface HomeWizardApiDataResponse {
+  /** The power feed-in meter reading for tariff 1 in kWh */
+  total_power_export_t1_kwh: number;
+  /** The total active usage in Watts */
+  active_power_w: number;
+  /** The active usage for fase 1 in Watts */
+  active_power_l1_w: number;
+}
+
+export interface HomeWizardApiDataResponse {
+  /** The DSMR version of the smart meter. Available for: HWE-P1 */
+  smr_version: number;
+  /** The brand indification the smart meter. Available for: HWE-P1 */
+  meter_model: string;
+  /**
+   * The Wi-Fi network that the meter is connected to. Available for: HWE-P1, HWE-WTR, SDM630-wifi, SDM230-wifi
+   *
+   * Note: docs says not available on HWE-SKT, but it is available on my HWE-SKT
+   */
+  wifi_ssid: string;
+  /**
+   * The strength of the Wi-Fi signal in %. Available for: HWE-P1, HWE-WTR, SDM630-wifi, SDM230-wifi
+   *
+   * Note: docs says not available on HWE-SKT, but it is available on my HWE-SKT
+   */
+  wifi_strength: string;
+  /** The power usage meter reading for tariff 1 in kWh. Available for: HWE-P1, SDM230-wifi, SDM630-wifi */
+  total_power_import_t1_kwh: number;
+  /** The power usage meter reading for tariff 2 in kWh. Available for: HWE-P1 */
+  total_power_import_t2_kwh: number;
+  /** The power feed-in meter reading for tariff 1 in kWh. Available: HWE-P1, HWE-SKT, SDM230-wifi, SDM630-wifi */
+  total_power_export_t1_kwh: number;
+  /** The power feed-in meter reading for tariff 2 in kWh. Available for: HWE-P1 */
+  total_power_export_t2_kwh: number;
+  /** The total active usage in Watts: Available for: HWE-P1, HWE-SKT, SDM230-wifi, SDM630-wifi */
+  active_power_w: number;
+  /** The active usage for fase 1 in Watts. Abailable for: HWE-P1, HWE-SKT, SDM230-wifi, SDM630-wifi */
+  active_power_l1_w: number;
+  /** The active usage for fase 2 in Watts. Available for: HWE-P1, SDM630-wifi */
+  active_power_l2_w: number;
+  /** The active usage for fase 3 in Watts. Available for: HWE-P1, SDM630-wifi  */
+  active_power_l3_w: number;
+  /** The gas meter reading in m3. Available for: HWE-P1 */
+  total_gas_m3: number;
+  /** The most recent gas update time stamp structured as YYMMDDhhmmss. Available for: HWE-P1 */
+  gas_timestamp: number;
+  /** Active water usage in liters per minute. Available for: HWE-WTR */
+  active_liter_lpm: number;
+  /** Total water usage in cubic meters since installation. Available for: HWE-WTR */
+  total_liter_m3: number;
+}
+
+export type HomeWizardEnergySocketApiDataResponse = Omit<
+  HomeWizardApiDataResponse,
+  | 'smr_version'
+  | 'meter_model'
+  | 'total_power_import_t2_kwh'
+  | 'total_power_export_t2_kwh'
+  | 'active_power_l2_w'
+  | 'active_power_l3_w'
+  | 'total_gas_m3'
+  | 'gas_timestamp'
+  | 'active_liter_lpm'
+  | 'total_liter_m3'
+>;
 
 /**
  * The /api/v1/identify endpoint can be used to let the user identify the device. The status light will blink for a few seconds after calling this endpoint.
