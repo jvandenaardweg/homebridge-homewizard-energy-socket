@@ -1,4 +1,5 @@
 import configSchemaJson from '../config.schema.json';
+import { DEFAULT_OUTLETINUSE_THRESHOLD, DEFAULT_OUTLETINUSE_THRESHOLD_DURATION } from './settings';
 
 import { HomebridgeHomeWizardEnergySocketsConfig } from './types';
 
@@ -41,6 +42,7 @@ describe('config.schema.json', () => {
     // outletInUse threshold
     expect(outletInUseProperties.threshold.type).toBe('number');
     expect(outletInUseProperties.threshold.default).toBe(5);
+    expect(DEFAULT_OUTLETINUSE_THRESHOLD).toBe(5);
     expect(outletInUseProperties.threshold.minimum).toBe(0.1); // do not allow 0, as that would mean that the outlet is always in use, which is not where this config option is for
     expect(outletInUseProperties.threshold.maximum).toBe(3680); // the max power of a socket is 3680W, see: https://www.homewizard.com/energy-socket/
     expect(outletInUseProperties.threshold.required).toBe(true);
@@ -48,6 +50,7 @@ describe('config.schema.json', () => {
     // outletInUse thresholdDuration
     expect(outletInUseProperties.thresholdDuration.type).toBe('number');
     expect(outletInUseProperties.thresholdDuration.default).toBe(10);
+    expect(DEFAULT_OUTLETINUSE_THRESHOLD_DURATION).toBe(10);
     expect(outletInUseProperties.thresholdDuration.minimum).toBe(0);
     expect(outletInUseProperties.thresholdDuration.maximum).toBe(86400); // 1 day in seconds
     expect(outletInUseProperties.thresholdDuration.required).toBe(true);

@@ -10,7 +10,12 @@ import {
 } from 'homebridge';
 import { Bonjour, Service as BonjourService } from 'bonjour-service';
 
-import { PLATFORM_NAME, PLUGIN_NAME } from '@/settings';
+import {
+  DEFAULT_OUTLETINUSE_THRESHOLD,
+  DEFAULT_OUTLETINUSE_THRESHOLD_DURATION,
+  PLATFORM_NAME,
+  PLUGIN_NAME,
+} from '@/settings';
 import { EnergySocketAccessory } from '@/energy-socket-accessory';
 import {
   EnergySocketAccessoryProperties,
@@ -396,6 +401,17 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
 
       const displayName = configName ? configName : `${productName} ${serialNumber}`; // "Energy Socket 3c12e7659852", which is used as the name in HomeKit
 
+      const energySocketConfigWithDefaults = {
+        ...energySocketConfig,
+        outletInUse: {
+          ...energySocketConfig?.outletInUse,
+          threshold: energySocketConfig?.outletInUse?.threshold || DEFAULT_OUTLETINUSE_THRESHOLD,
+          thresholdDuration:
+            energySocketConfig?.outletInUse?.thresholdDuration ||
+            DEFAULT_OUTLETINUSE_THRESHOLD_DURATION,
+        },
+      } satisfies EnergySocketConfig;
+
       const energySocketProperties = {
         uuid,
         ip,
@@ -407,7 +423,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
         productType,
         firmwareVersion,
         activePower,
-        config: energySocketConfig,
+        config: energySocketConfigWithDefaults,
       } satisfies EnergySocketAccessoryProperties;
 
       this.log.debug(
