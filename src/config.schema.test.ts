@@ -17,14 +17,40 @@ describe('config.schema.json', () => {
 
     expect(properties.energySockets.items.type).toBe('object');
 
+    const energySocketProperties = properties.energySockets.items.properties;
+
     // name
-    expect(properties.energySockets.items.properties.name.type).toBe('string');
-    expect(properties.energySockets.items.properties.name.required).toBe(true);
+    expect(energySocketProperties.name.type).toBe('string');
+    expect(energySocketProperties.name.required).toBe(true);
 
     // ip
-    expect(properties.energySockets.items.properties.ip.type).toBe('string');
-    expect(properties.energySockets.items.properties.ip.required).toBe(true);
-    expect(properties.energySockets.items.properties.ip.format).toBe('ipv4');
+    expect(energySocketProperties.ip.type).toBe('string');
+    expect(energySocketProperties.ip.required).toBe(true);
+    expect(energySocketProperties.ip.format).toBe('ipv4');
+
+    // outletInUse
+    expect(energySocketProperties.outletInUse.type).toBe('object');
+
+    const outletInUseProperties = energySocketProperties.outletInUse.properties;
+
+    // outletInUse isActive
+    expect(outletInUseProperties.isActive.type).toBe('boolean');
+    expect(outletInUseProperties.isActive.default).toBe(false);
+    expect(outletInUseProperties.isActive.required).toBe(false);
+
+    // outletInUse threshold
+    expect(outletInUseProperties.threshold.type).toBe('number');
+    expect(outletInUseProperties.threshold.default).toBe(5);
+    expect(outletInUseProperties.threshold.minimum).toBe(0.1); // do not allow 0, as that would mean that the outlet is always in use, which is not where this config option is for
+    expect(outletInUseProperties.threshold.maximum).toBe(3680); // the max power of a socket is 3680W, see: https://www.homewizard.com/energy-socket/
+    expect(outletInUseProperties.threshold.required).toBe(true);
+
+    // outletInUse thresholdDuration
+    expect(outletInUseProperties.thresholdDuration.type).toBe('number');
+    expect(outletInUseProperties.thresholdDuration.default).toBe(10);
+    expect(outletInUseProperties.thresholdDuration.minimum).toBe(0);
+    expect(outletInUseProperties.thresholdDuration.maximum).toBe(86400); // 1 day in seconds
+    expect(outletInUseProperties.thresholdDuration.required).toBe(true);
   });
 
   it('Should have the correct name property', async () => {

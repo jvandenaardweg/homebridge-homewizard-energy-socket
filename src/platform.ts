@@ -21,7 +21,11 @@ import {
   TxtRecord,
 } from '@/api/types';
 import { HomeWizardApi } from './api';
-import { HomebridgeHomeWizardEnergySocketsConfig } from './types';
+import {
+  EnergySocketConfig,
+  HomebridgeHomeWizardEnergySocketsConfig,
+  WithRequiredProperty,
+} from './types';
 
 /**
  * HomebridgePlatform
@@ -193,8 +197,19 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     }
   }
 
+  /**
+   * A type guard to verify if ip ánd name is set.
+   */
+  hasValidEnergySocketsConfig(
+    energySocketsConfig: EnergySocketConfig[],
+  ): energySocketsConfig is WithRequiredProperty<EnergySocketConfig, 'ip' | 'name'>[] {
+    return !!energySocketsConfig.every(energySocket => energySocket.ip && energySocket.name);
+  }
+
   async handleEnergySocketsFromConfig(): Promise<void> {
-    if (!this.config.energySockets || !this.config.energySockets.length) {
+    const energySocketsConfig = this.config.energySockets;
+
+    if (!energySocketsConfig || !energySocketsConfig.length) {
       this.log.error(
         this.loggerPrefix,
         `handleEnergySocketsFromConfig is invoked, but config.energySockets has no array items. We are stopping.`,
@@ -203,15 +218,25 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
       return;
     }
 
+    // This is a type guard to verify if ip ánd name is set
+    if (!this.hasValidEnergySocketsConfig(energySocketsConfig)) {
+      this.log.error(
+        this.loggerPrefix,
+        `handleEnergySocketsFromConfig is invoked, but not all config.energySockets have an ip and name. We are stopping.`,
+      );
+
+      return;
+    }
+
     this.log.debug(
       this.loggerPrefix,
-      `Found ${this.config.energySockets.length} Energy Sockets in config, skipping automatic discovery...`,
+      `Found ${energySocketsConfig.length} Energy Sockets in config, skipping automatic discovery...`,
     );
 
     // First, check if there are accessories in the cache that do not exist anymore in the config
     // We should remove these
     const staleCachedAccessories = this.cachedAccessories.filter(accessory => {
-      return this.isStaleCachedAccessory(accessory, this.config.energySockets);
+      return this.isStaleCachedAccessory(accessory, energySocketsConfig);
     });
 
     if (staleCachedAccessories.length) {
@@ -236,7 +261,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
       }
     }
 
-    for (const energySocket of this.config.energySockets) {
+    for (const energySocket of energySocketsConfig) {
       try {
         const { energySocketProperties, api } = await this.getEnergySocketPropertiesFromIp(
           energySocket.ip,
@@ -334,6 +359,10 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
       `Using IP ${ip} to find information about the Energy Socket...`,
     );
 
+    const energySocketConfig = this.config.energySockets?.find(
+      energySocket => energySocket.ip === ip,
+    );
+
     // do not use hostname, because its too slow for Homekit, because it will need to resolve the hostname to an IP address first,
     // the lookup is blocking nodejs I/O, so it can take longer than homekit and homebridge likes
     // apiUrl: `http://${hostname}:${port}`,
@@ -346,7 +375,13 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
 
       // Call the basic endpoint to get the firmware version
       // this is not available in the txt record, but required for our accessory
-      const basicInformation = await api.getBasicInformation();
+      const [basicInformation, data] = await Promise.all([
+        api.getBasicInformation(),
+        api.getData(HomeWizardDeviceTypes.WIFI_ENERGY_SOCKET),
+      ]);
+
+      // Get the initial active power value, even if
+      const activePower = data.active_power_w || null;
 
       const firmwareVersion = basicInformation.firmware_version;
       const productName = basicInformation.product_name;
@@ -371,6 +406,8 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
         displayName,
         productType,
         firmwareVersion,
+        activePower,
+        config: energySocketConfig,
       } satisfies EnergySocketAccessoryProperties;
 
       this.log.debug(
