@@ -22,12 +22,54 @@
           "properties": {
             "name": {
               "type": "string",
+              "title": "Name",
+              "placeholder": "What is plugged in?",
               "required": true
             },
             "ip": {
               "type": "string",
+              "title": "IP Address",
+              "placeholder": "192.168.0.10",
               "format": "ipv4",
               "required": true
+            },
+            "outletInUse": {
+              "type": "object",
+              "properties": {
+                "isActive": {
+                  "title": "Use Outlet in Use?",
+                  "type": "boolean",
+                  "required": false,
+                  "default": false,
+                  "description": "When enabled, the \"Outlet In Use\" characteristic will be shown as \"Yes\" if the Energy Socket is drawing power. You can trigger automations based on this characteristic. By default this characteristic is \"No\"."
+                },
+                "threshold": {
+                  "title": "Threshold (watts)",
+                  "placeholder": "Power usage in watts",
+                  "type": "number",
+                  "required": true,
+                  "default": 5,
+                  "minimum": 0.1,
+                  "maximum": 3680,
+                  "description": "When the power consumption is higher than this threshold, the \"Outlet In Use\" characteristic will be shown as \"Yes\" in the Home app. Defaults to 1 watt.",
+                  "condition": {
+                    "functionBody": "return model.energySockets[arrayIndices].outletInUse.isActive === true;"
+                  }
+                },
+                "thresholdDuration": {
+                  "title": "Threshold Duration (seconds)",
+                  "placeholder": "Duration in seconds",
+                  "type": "number",
+                  "required": true,
+                  "default": 10,
+                  "minimum": 0,
+                  "maximum": 86400,
+                  "description": "When the power consumption is higher than the threshold for this duration, the \"Outlet In Use\" characteristic will be shown as \"Yes\" in the Home app. Defaults to 10 seconds.",
+                  "condition": {
+                    "functionBody": "return model.energySockets[arrayIndices].outletInUse.isActive === true;"
+                  }
+                }
+              }
             }
           }
         }
@@ -38,6 +80,7 @@
     {
       "type": "flex",
       "flex-flow": "row wrap",
+      "orderable": false,
       "items": [
         {
           "key": "name",
@@ -50,6 +93,7 @@
       "title": "Energy Sockets",
       "description": "<strong>This config option is optional.</strong> Only use this if you want to bypass automatic discovery or use only the Energy Sockets you define here. When no Energy Sockets are defined here, the plugin will automatically discover all Energy Sockets on your network.",
       "expandable": true,
+      "orderable": false,
       "items": [
         {
           "type": "help",
@@ -60,20 +104,38 @@
           "key": "energySockets",
           "type": "array",
           "notitle": true,
+          "orderable": false,
           "items": [
             {
               "type": "flex",
               "flex-flow": "row wrap",
               "items": [
                 {
-                  "key": "energySockets[].name",
-                  "title": "Name",
-                  "placeholder": "What is plugged in?"
+                  "type": "flex",
+                  "flex-flow": "row wrap",
+                  "items": [
+                    {
+                      "key": "energySockets[].name"
+                    },
+                    {
+                      "key": "energySockets[].ip"
+                    }
+                  ]
                 },
                 {
-                  "key": "energySockets[].ip",
-                  "title": "IP Address",
-                  "placeholder": "192.168.0.10"
+                  "type": "flex",
+                  "flex-flow": "row wrap",
+                  "items": [
+                    {
+                      "key": "energySockets[].outletInUse.isActive"
+                    },
+                    {
+                      "key": "energySockets[].outletInUse.threshold"
+                    },
+                    {
+                      "key": "energySockets[].outletInUse.thresholdDuration"
+                    }
+                  ]
                 }
               ]
             }

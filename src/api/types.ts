@@ -1,3 +1,5 @@
+import { EnergySocketConfig } from '@/types';
+
 export const PLATFORM_MANUFACTURER = 'HomeWizard';
 
 /**
@@ -60,6 +62,8 @@ export interface EnergySocketAccessoryProperties {
   /** The name we display to the user during first setup in the Home App, like: `"Energy Socket 3c12e7659852"` */
   displayName: string;
   firmwareVersion: string;
+  activePower: number | null;
+  config?: EnergySocketConfig;
 }
 
 /**

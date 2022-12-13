@@ -22,4 +22,5 @@ export const mockAccessoryContext = {
   uuid: mockUUID,
   firmwareVersion: mockFirmwareVersion,
   apiVersion: mockApiVersion,
+  activePower: null,
 } satisfies EnergySocketAccessoryProperties;
