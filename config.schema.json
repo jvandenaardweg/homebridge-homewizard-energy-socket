@@ -51,7 +51,7 @@
                   "default": 5,
                   "minimum": 0.1,
                   "maximum": 3680,
-                  "description": "When the power consumption is higher than this threshold, the \"Outlet In Use\" characteristic will be shown as \"Yes\" in the Home app. Otherwise it shows \"No\". Defaults to 1 watt.",
+                  "description": "When the power consumption is higher than this threshold, the \"Outlet In Use\" characteristic will be shown as \"Yes\" in the Home app. Otherwise it shows \"No\". Defaults to 5 watt.",
                   "condition": {
                     "functionBody": "return model.energySockets[arrayIndices].outletInUse.isActive === true;"
                   }
