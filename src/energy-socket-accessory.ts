@@ -119,12 +119,16 @@ export class EnergySocketAccessory {
    * Get the initial OutletInUse upon instance creation.
    *
    * We ignore the thresholdDuration here, because we need to set an initial value, that is either true or false.
+   *
+   * When there is no isActive config property, we assume the outlet is always in use
    */
   get initialIsOutletInUse(): boolean {
-    return this.config?.outletInUse?.isActive &&
-      this.getIsActivePowerAboveThreshold(this.properties.activePower)
-      ? true
-      : false;
+    // When there is no isActive config property, we assume the outlet is always in use
+    if (!this.config?.outletInUse?.isActive) {
+      return true;
+    }
+
+    return this.getIsActivePowerAboveThreshold(this.properties.activePower);
   }
 
   logCurrentOutletInUseState() {
