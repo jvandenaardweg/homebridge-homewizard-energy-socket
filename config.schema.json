@@ -41,7 +41,7 @@
                   "type": "boolean",
                   "required": false,
                   "default": false,
-                  "description": "When enabled, the \"Outlet In Use\" characteristic will be shown as \"Yes\" if the Energy Socket is drawing power. You can trigger automations based on this characteristic. By default this characteristic is \"No\"."
+                  "description": "When enabled, the \"Outlet In Use\" characteristic will be shown as \"Yes\" if the device plugged in the Energy Socket is consuming a certain amount of power. You can trigger automations based on this characteristic.<br /><a href='https://github.com/jvandenaardweg/homebridge-homewizard-energy-socket/wiki/About-the-Outlet-In-Use-characteristic' target='_blank'>Learn more about it in the Wiki</a>."
                 },
                 "threshold": {
                   "title": "Threshold (watts)",
@@ -51,7 +51,7 @@
                   "default": 5,
                   "minimum": 0.1,
                   "maximum": 3680,
-                  "description": "When the power consumption is higher than this threshold, the \"Outlet In Use\" characteristic will be shown as \"Yes\" in the Home app. Defaults to 1 watt.",
+                  "description": "When the power consumption is higher than this threshold, the \"Outlet In Use\" characteristic will be shown as \"Yes\" in the Home app. Otherwise it shows \"No\". Defaults to 1 watt.",
                   "condition": {
                     "functionBody": "return model.energySockets[arrayIndices].outletInUse.isActive === true;"
                   }
@@ -64,7 +64,7 @@
                   "default": 10,
                   "minimum": 0,
                   "maximum": 86400,
-                  "description": "When the power consumption is higher than the threshold for this duration, the \"Outlet In Use\" characteristic will be shown as \"Yes\" in the Home app. Defaults to 10 seconds.",
+                  "description": "When the power consumption is higher than the threshold for this duration, the \"Outlet In Use\" characteristic will be shown as \"Yes\" in the Home app. Otherwise it shows \"No\". Defaults to 10 seconds.",
                   "condition": {
                     "functionBody": "return model.energySockets[arrayIndices].outletInUse.isActive === true;"
                   }
