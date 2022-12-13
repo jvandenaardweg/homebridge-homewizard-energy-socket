@@ -43,12 +43,8 @@ export interface TxtRecord {
 export interface EnergySocketAccessoryProperties {
   /** Accessory UUID, used to identify the accessory within HomeBridge. This uuid is generated from the `id` and `serialNumber`, which are the same. */
   uuid: string;
-  /** Hostname of the device. Example: `"energysocket-185952.local"` */
-  // hostname: string;
   /** The IP address of the device. Example: `"192.168.1.20"` */
   ip: string;
-  /** The port at which the API of this device is running. Example: 80 */
-  // port: number;
   /** The version of the API. Example: `"v1"` */
   apiVersion: string;
   /** The API url of this device, without trailing slash. Example: "`http://192.168.1.20`" */
@@ -61,8 +57,11 @@ export interface EnergySocketAccessoryProperties {
   productType: HomeWizardDeviceTypes;
   /** The name we display to the user during first setup in the Home App, like: `"Energy Socket 3c12e7659852"` */
   displayName: string;
+  /** The firmware version of the device. Some API features are not available based on the firmware version. Example: `"3.0"` */
   firmwareVersion: string;
+  /** The initial active power value in watts. Example: `2.45` */
   activePower: number | null;
+  /** The config options for this energy socket as defined by the user. Attached to this energy socket by IP. */
   config?: EnergySocketConfig;
 }
 

@@ -18,7 +18,7 @@ import {
 import { EnergySocketConfig } from './types';
 
 const POLLING_INTERVAL = 1000; // in ms
-const SHOW_POLLING_ERRORS_INTERVAL = (15 * 60 * 1000) / POLLING_INTERVAL; // Show error every 15 minutes, if we poll every 3 seconds that's every 300 errors
+const SHOW_POLLING_ERRORS_INTERVAL = (15 * 60 * 1000) / POLLING_INTERVAL; // Show error every 15 minutes, if we poll every 1 second that's every 900 errors
 
 /**
  * Platform Accessory
@@ -29,7 +29,6 @@ export class EnergySocketAccessory {
   private service: Service;
   private informationService: Service | undefined;
   private properties: EnergySocketAccessoryProperties;
-  private loggerPrefix: string;
   private homeWizardApi: HomeWizardApi;
   private localStateResponse: HomeWizardApiStateResponse | undefined;
   private config: EnergySocketConfig | undefined;
@@ -48,14 +47,7 @@ export class EnergySocketAccessory {
     this.properties = properties;
     this.config = properties.config;
 
-    const loggerPrefix = `[Energy Socket: ${properties.displayName}] -> `;
-
-    this.loggerPrefix = loggerPrefix;
-
-    this.platform.log.debug(
-      this.loggerPrefix,
-      `Initializing platform accessory ${JSON.stringify(properties)}`,
-    );
+    this.log.debug(`Initializing platform accessory ${JSON.stringify(this.properties)}`);
 
     this.homeWizardApi = api;
 
@@ -69,15 +61,15 @@ export class EnergySocketAccessory {
     );
     informationService?.setCharacteristic(
       this.platform.Characteristic.Model,
-      this.getModel(properties.productName, properties.productType), // "Energy Socket (HWE-SKT"
+      this.modelName, // "Energy Socket (HWE-SKT"
     );
     informationService?.setCharacteristic(
       this.platform.Characteristic.SerialNumber,
-      properties.serialNumber, // Like: "1c23e7280952"
+      this.properties.serialNumber, // Like: "1c23e7280952"
     );
     informationService?.setCharacteristic(
       this.platform.Characteristic.FirmwareRevision,
-      properties.firmwareVersion, // Like: "3.02"
+      this.properties.firmwareVersion, // Like: "3.02"
     );
 
     // Set accessory information
@@ -90,7 +82,7 @@ export class EnergySocketAccessory {
       this.accessory.addService(this.platform.Service.Outlet);
 
     // Set the service name, this is what is displayed as the default name on the Home app
-    this.service.setCharacteristic(this.platform.Characteristic.Name, properties.displayName);
+    this.service.setCharacteristic(this.platform.Characteristic.Name, this.properties.displayName);
 
     // We update this characteristic by polling the /data endpoint
     // Set the initial value by using the activePower property from the properties object
@@ -109,8 +101,7 @@ export class EnergySocketAccessory {
     // Listen for the "identify" event for this Accessory
     this.accessory.on(PlatformAccessoryEvent.IDENTIFY, this.handleIdentify.bind(this));
 
-    this.platform.log.info(
-      this.loggerPrefix,
+    this.log.info(
       `OutletInUse initial value is ${this.isOutletInUse ? 'ON' : 'OFF'} (${
         this.properties.activePower
       } watt)`,
@@ -118,6 +109,29 @@ export class EnergySocketAccessory {
 
     // Start long polling the /data endpoint to get the current power usage
     this.longPollData();
+  }
+
+  get log() {
+    const loggerPrefix = `[Energy Socket: ${this.properties.displayName}] -> `;
+
+    return {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      info: (...parameters: any[]) => {
+        this.platform.log.info(loggerPrefix, ...parameters);
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      warn: (...parameters: any[]) => {
+        this.platform.log.warn(loggerPrefix, ...parameters);
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      error: (...parameters: any[]) => {
+        this.platform.log.error(loggerPrefix, ...parameters);
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      debug: (...parameters: any[]) => {
+        this.platform.log.debug(loggerPrefix, ...parameters);
+      },
+    };
   }
 
   /**
@@ -134,6 +148,18 @@ export class EnergySocketAccessory {
     }
 
     return this.getIsActivePowerAboveThreshold(this.properties.activePower);
+  }
+
+  /**
+   * The firmware version of the device. Some API features may not work with different firmware versions.
+   */
+  get firmwareVersion(): number | null {
+    const firmwareVersionString = this.informationService?.getCharacteristic(
+      this.platform.Characteristic.FirmwareRevision,
+    ).value;
+    const firmwareVersion = firmwareVersionString ? Number(firmwareVersionString) : null;
+
+    return firmwareVersion;
   }
 
   get isOutletInUse(): boolean {
@@ -177,16 +203,29 @@ export class EnergySocketAccessory {
     return currentTime - crossedBelowThresholdTime >= this.thresholdDurationInMs;
   }
 
+  get isSwitchLockEnabled(): boolean {
+    return this.localStateResponse?.switch_lock === true;
+  }
+
+  get modelName(): string {
+    return `${this.properties.productName} (${this.properties.productType})`;
+  }
+
+  getIsActivePowerAboveThreshold(activePower: number | null | undefined): boolean {
+    return !!(activePower && activePower > (this.config?.outletInUse?.threshold || 0));
+  }
+
   setOutletInUse(value: boolean, activePower: number | null | undefined) {
     this.service.setCharacteristic(this.platform.Characteristic.OutletInUse, value);
 
     this.longPollCrossedThresholdAboveAt = null;
     this.longPollCrossedThresholdBelowAt = null;
 
-    this.platform.log.info(
-      this.loggerPrefix,
-      `OutletInUse is changed to ${value ? 'ON' : 'OFF'} (${activePower} watt)`,
-    );
+    this.log.info(`OutletInUse is changed to ${value ? 'ON' : 'OFF'} (${activePower} watt)`);
+  }
+
+  setLocalStateResponse(response: HomeWizardApiStateResponse): void {
+    this.localStateResponse = response;
   }
 
   /**
@@ -194,16 +233,9 @@ export class EnergySocketAccessory {
    */
   syncOutletInUseStateWithOnState(isOn: boolean) {
     if (!this.config?.outletInUse?.isActive) {
-      this.platform.log.debug(
-        this.loggerPrefix,
-        `Energy Socket OutletInUse state is updated to ${isOn ? 'ON' : 'OFF'}`,
-      );
+      this.log.debug(`Energy Socket OutletInUse state is updated to ${isOn ? 'ON' : 'OFF'}`);
       this.service.setCharacteristic(this.platform.Characteristic.OutletInUse, isOn);
     }
-  }
-
-  getIsActivePowerAboveThreshold(activePower: number | null | undefined): boolean {
-    return !!(activePower && activePower > (this.config?.outletInUse?.threshold || 0));
   }
 
   /**
@@ -217,8 +249,7 @@ export class EnergySocketAccessory {
    */
   async longPollData() {
     if (!this.config?.outletInUse?.isActive) {
-      this.platform.log.debug(
-        this.loggerPrefix,
+      this.log.debug(
         'outletInUse.isActive config option is false or not set, not long polling the /data endpoint',
       );
 
@@ -227,10 +258,7 @@ export class EnergySocketAccessory {
 
     if (this.properties.productType !== HomeWizardDeviceTypes.WIFI_ENERGY_SOCKET) {
       // this should not happen, but acts as a type guard
-      this.platform.log.debug(
-        this.loggerPrefix,
-        'Not a Energy Socket, not long polling the /data endpoint',
-      );
+      this.log.debug('Not a Energy Socket, not long polling the /data endpoint');
 
       return;
     }
@@ -251,7 +279,6 @@ export class EnergySocketAccessory {
       if (isActivePowerAboveThreshold && !this.isOutletInUse) {
         if (!this.longPollCrossedThresholdAboveAt) {
           this.longPollCrossedThresholdAboveAt = new Date();
-          // this.longPollCrossedThresholdBelowAt = null;
         }
       }
 
@@ -259,15 +286,13 @@ export class EnergySocketAccessory {
       // And only set to false if the current isOutletInUse value is true
       if (!isActivePowerAboveThreshold && this.isOutletInUse) {
         if (!this.longPollCrossedThresholdBelowAt) {
-          // this.longPollCrossedThresholdAboveAt = null;
           this.longPollCrossedThresholdBelowAt = new Date();
         }
       }
 
       // Specifically check for true, because it could be null
       if (this.isThresholdCrossedAboveAfterDuration === true && !this.isOutletInUse) {
-        this.platform.log.debug(
-          this.loggerPrefix,
+        this.log.debug(
           `OutletInUse threshold crossed above ${this.config.outletInUse.threshold} watt for ${this.config.outletInUse.thresholdDuration} seconds, set OutletInUse to true`,
         );
 
@@ -276,8 +301,7 @@ export class EnergySocketAccessory {
 
       // Specifically check for false, because it could be null
       if (this.isThresholdCrossedBelowAfterDuration === true && this.isOutletInUse) {
-        this.platform.log.debug(
-          this.loggerPrefix,
+        this.log.debug(
           `OutletInUse threshold crossed below ${this.config.outletInUse.threshold} watt for ${this.config.outletInUse.thresholdDuration} seconds, set OutletInUse to false`,
         );
 
@@ -285,7 +309,7 @@ export class EnergySocketAccessory {
       }
 
       // Verbose logging for debug purposes while developing
-      // this.platform.log.debug(
+      // this.log.debug(
       //   'active_power_w',
       //   this.properties.displayName,
       //   active_power_w?.toFixed(3),
@@ -325,11 +349,7 @@ export class EnergySocketAccessory {
       // Only show the error if it's the first error or the last error
       // The first error to not wait for the SHOW_POLLING_ERRORS_INTERVAL to show any error
       if (isErrorCountAfterInterval || isFirstError) {
-        this.platform.log.error(
-          this.loggerPrefix,
-          'Error during polling the data endpoint',
-          errorMessage,
-        );
+        this.log.error('Error during polling the data endpoint', errorMessage);
       }
 
       if (isErrorCountAfterInterval) {
@@ -343,18 +363,6 @@ export class EnergySocketAccessory {
       // Continue polling, device is probably offline, maybe it will come back online
       setTimeout(this.longPollData.bind(this), POLLING_INTERVAL);
     }
-  }
-
-  /**
-   * The firmware version of the device. Some API features may not work with different firmware versions.
-   */
-  get firmwareVersion(): number | null {
-    const firmwareVersionString = this.informationService?.getCharacteristic(
-      this.platform.Characteristic.FirmwareRevision,
-    ).value;
-    const firmwareVersion = firmwareVersionString ? Number(firmwareVersionString) : null;
-
-    return firmwareVersion;
   }
 
   /**
@@ -375,14 +383,6 @@ export class EnergySocketAccessory {
     }
   }
 
-  getModel(productName: string, productType: string): string {
-    return `${productName} (${productType})`;
-  }
-
-  get isSwitchLockEnabled(): boolean {
-    return this.localStateResponse?.switch_lock === true;
-  }
-
   /**
    * Handle "SET" requests from HomeKit
    * These are sent when the user changes the state of an accessory, for example, turning on a Light bulb.
@@ -395,8 +395,7 @@ export class EnergySocketAccessory {
       // If the switch_lock setting is true, we cannot enable the Energy Socket through the API
       // The user first has to enable the Switch Lock in the HomeWizard Energy app
       if (this.isSwitchLockEnabled) {
-        this.platform.log.warn(
-          this.loggerPrefix,
+        this.log.warn(
           `This Energy Socket (${this.properties.serialNumber}) is locked. Please enable the "Switch lock" setting in the HomeWizard Energy app for this Energy Socket.`,
         );
 
@@ -413,10 +412,7 @@ export class EnergySocketAccessory {
 
       const isOn = response.power_on;
 
-      this.platform.log.info(
-        this.loggerPrefix,
-        `Energy Socket On state is updated to ${isOn ? 'ON' : 'OFF'}`,
-      );
+      this.log.info(`Energy Socket On state is updated to ${isOn ? 'ON' : 'OFF'}`);
 
       // Keep the OutletInUse characteristic in sync with the ON state if the config for outletInUse is not set
       this.syncOutletInUseStateWithOnState(isOn);
@@ -425,10 +421,6 @@ export class EnergySocketAccessory {
 
       throw this.handleAccessoryApiError(error, fallbackErrorMessage);
     }
-  }
-
-  setLocalStateResponse(response: HomeWizardApiStateResponse): void {
-    this.localStateResponse = response;
   }
 
   /**
@@ -446,7 +438,6 @@ export class EnergySocketAccessory {
    */
   async handleGetOn(): Promise<CharacteristicValue> {
     try {
-      // TODO: move to using this.service.updateCharacteristic(this.platform.Characteristic.On, true) and remove await here?
       const response = await this.homeWizardApi.getState();
 
       // Put it in the local state, so we can keep track of the switch_lock setting, this must be enabled
@@ -455,10 +446,7 @@ export class EnergySocketAccessory {
 
       const isOn = response.power_on;
 
-      this.platform.log.info(
-        this.loggerPrefix,
-        `Energy Socket On state is updated ${isOn ? 'ON' : 'OFF'}`,
-      );
+      this.log.info(`Energy Socket On state is updated ${isOn ? 'ON' : 'OFF'}`);
 
       // Keep the OutletInUse characteristic in sync with the ON state if the config for outletInUse is not set
       this.syncOutletInUseStateWithOnState(isOn);
@@ -478,7 +466,7 @@ export class EnergySocketAccessory {
       errorMessage = error.message;
     }
 
-    this.platform.log.error(this.loggerPrefix, errorMessage);
+    this.log.error(errorMessage);
 
     // TODO: handle scenario where the device is offline, is fetched in homekit and shows as non responsive. But then comes back online again. The status is not being updated and api keeps coming back as 403
     return new this.platform.api.hap.HapStatusError(
