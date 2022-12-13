@@ -109,7 +109,12 @@ export class EnergySocketAccessory {
     // Listen for the "identify" event for this Accessory
     this.accessory.on(PlatformAccessoryEvent.IDENTIFY, this.handleIdentify.bind(this));
 
-    this.logCurrentOutletInUseState();
+    this.platform.log.info(
+      this.loggerPrefix,
+      `OutletInUse initial value is ${this.isOutletInUse ? 'ON' : 'OFF'} (${
+        this.properties.activePower
+      } watt)`,
+    );
 
     // Start long polling the /data endpoint to get the current power usage
     this.longPollData();
@@ -129,15 +134,6 @@ export class EnergySocketAccessory {
     }
 
     return this.getIsActivePowerAboveThreshold(this.properties.activePower);
-  }
-
-  logCurrentOutletInUseState() {
-    this.platform.log.info(
-      this.loggerPrefix,
-      `OutletInUse value is ${this.isOutletInUse ? 'ON' : 'OFF'} (${
-        this.properties.activePower
-      } watt)`,
-    );
   }
 
   get isOutletInUse(): boolean {
@@ -191,6 +187,19 @@ export class EnergySocketAccessory {
       this.loggerPrefix,
       `OutletInUse is changed to ${value ? 'ON' : 'OFF'} (${activePower} watt)`,
     );
+  }
+
+  /**
+   * Keep the OutletInUse characteristic in sync with the ON state if the config for outletInUse is not set
+   */
+  syncOutletInUseStateWithOnState(isOn: boolean) {
+    if (!this.config?.outletInUse?.isActive) {
+      this.platform.log.debug(
+        this.loggerPrefix,
+        `Energy Socket OutletInUse state is updated to ${isOn ? 'ON' : 'OFF'}`,
+      );
+      this.service.setCharacteristic(this.platform.Characteristic.OutletInUse, isOn);
+    }
   }
 
   getIsActivePowerAboveThreshold(activePower: number | null | undefined): boolean {
@@ -402,12 +411,15 @@ export class EnergySocketAccessory {
         power_on: value as boolean,
       });
 
+      const isOn = response.power_on;
+
       this.platform.log.info(
         this.loggerPrefix,
-        `Energy Socket state is updated to ${response.power_on ? 'ON' : 'OFF'}`,
+        `Energy Socket On state is updated to ${isOn ? 'ON' : 'OFF'}`,
       );
 
-      // TODO: set OutletInUse to false if power_on is false. Do not set to true if power_on is true, because the outletInUse is set by the longPollData method. When an energy socket is turned on, we don't know if the device connected to it is drawing power.
+      // Keep the OutletInUse characteristic in sync with the ON state if the config for outletInUse is not set
+      this.syncOutletInUseStateWithOnState(isOn);
     } catch (error) {
       const fallbackErrorMessage = 'A unknown error occurred while setting the ON state';
 
@@ -441,10 +453,15 @@ export class EnergySocketAccessory {
       // If not, we can show a warning in the log
       this.setLocalStateResponse(response);
 
+      const isOn = response.power_on;
+
       this.platform.log.info(
         this.loggerPrefix,
-        `Energy Socket state is ${response.power_on ? 'ON' : 'OFF'}`,
+        `Energy Socket On state is updated ${isOn ? 'ON' : 'OFF'}`,
       );
+
+      // Keep the OutletInUse characteristic in sync with the ON state if the config for outletInUse is not set
+      this.syncOutletInUseStateWithOnState(isOn);
 
       return response.power_on;
     } catch (error) {
