@@ -229,7 +229,9 @@ export class EnergySocketAccessory {
   }
 
   /**
-   * Keep the OutletInUse characteristic in sync with the ON state if the config for outletInUse is not set
+   * Keep the OutletInUse characteristic in sync with the ON state if the config for outletInUse is not set.
+   *
+   * Only setting the OutletInUse characteristic when the config is not set, because when the config is set, the OutletInUse characteristic is set by the long polling.
    */
   syncOutletInUseStateWithOnState(isOn: boolean) {
     if (!this.config?.outletInUse?.isActive) {
@@ -414,7 +416,7 @@ export class EnergySocketAccessory {
 
       this.log.info(`Energy Socket On state is updated to ${isOn ? 'ON' : 'OFF'}`);
 
-      // Keep the OutletInUse characteristic in sync with the ON state if the config for outletInUse is not set
+      // Keep the OutletInUse characteristic in sync with the ON/OFF state if the config for outletInUse is not set
       this.syncOutletInUseStateWithOnState(isOn);
     } catch (error) {
       const fallbackErrorMessage = 'A unknown error occurred while setting the ON state';
