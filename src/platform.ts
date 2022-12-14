@@ -177,7 +177,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
 
     // Skip if the device is not an Energy Socket
     if (!this.isDeviceProductTypeSupported(txtRecord)) {
-      this.log.info(
+      this.log.debug(
         this.loggerPrefix,
         `Found a device that is not an Energy Socket (${HomeWizardDeviceTypes.WIFI_ENERGY_SOCKET}), skipping`,
         JSON.stringify(txtRecord),
@@ -189,7 +189,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     if (!this.isDeviceApiEnabled(txtRecord)) {
       this.log.info(
         this.loggerPrefix,
-        `Found a Energy Socket, but it has not enabled the "Local Api" setting, skipping`,
+        `Found a Energy Socket, but it has not enabled the "Local API" setting, skipping. If you want to use this device, please enable the "Local API" setting in the HomeWizard app for Energy Socket with ID: ${txtRecord.serial}. Otherwise, you can ignore this message.`,
         JSON.stringify(txtRecord),
       );
       return;
@@ -254,7 +254,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     const energySocketsConfig = this.config.energySockets;
 
     if (!energySocketsConfig || !energySocketsConfig.length) {
-      this.log.info(
+      this.log.warn(
         this.loggerPrefix,
         `No Energy Sockets are configured, we stop. You can configure them in the config.json`,
       );
@@ -280,7 +280,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
       );
 
       for (const staleCachedAccessory of staleCachedAccessories) {
-        this.log.info(
+        this.log.debug(
           this.loggerPrefix,
           `Removing stale cached accessory: ${staleCachedAccessory.displayName} (${staleCachedAccessory.UUID})`,
         );
@@ -375,7 +375,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     accessory: PlatformAccessory<HomeWizardEnergyPlatformAccessoryContext>,
     api: HomeWizardApi,
   ): void {
-    this.log.info(this.loggerPrefix, 'Attaching accessory to platform:', accessory.displayName);
+    this.log.debug(this.loggerPrefix, 'Attaching accessory to platform:', accessory.displayName);
 
     // Create the accessory handler for the restored accessory
     new EnergySocketAccessory(this, accessory, api);
