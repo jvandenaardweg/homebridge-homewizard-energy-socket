@@ -10,12 +10,7 @@ import {
 } from 'homebridge';
 import { Bonjour, Service as BonjourService } from 'bonjour-service';
 
-import {
-  DEFAULT_OUTLETINUSE_THRESHOLD,
-  DEFAULT_OUTLETINUSE_THRESHOLD_DURATION,
-  PLATFORM_NAME,
-  PLUGIN_NAME,
-} from '@/settings';
+import { PLATFORM_NAME, PLUGIN_NAME } from '@/settings';
 import { EnergySocketAccessory } from '@/energy-socket-accessory';
 import {
   EnergySocketAccessoryProperties,
@@ -26,11 +21,14 @@ import {
   TxtRecord,
 } from '@/api/types';
 import { HomeWizardApi } from './api';
+import { EnergySocketConfig, WithRequiredProperty } from './types';
+import { ZodError } from 'zod';
 import {
-  EnergySocketConfig,
-  HomebridgeHomeWizardEnergySocketsConfig,
-  WithRequiredProperty,
-} from './types';
+  ConfigSchema,
+  configSchema,
+  DEFAULT_OUTLETINUSE_THRESHOLD,
+  DEFAULT_OUTLETINUSE_THRESHOLD_DURATION,
+} from './config.schema';
 
 /**
  * HomebridgePlatform
@@ -43,7 +41,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
 
   public cachedAccessories: PlatformAccessory<HomeWizardEnergyPlatformAccessoryContext>[] = [];
 
-  private config: HomebridgeHomeWizardEnergySocketsConfig;
+  private config: ConfigSchema;
 
   private bonjour: Bonjour | null = null;
 
@@ -53,7 +51,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     const loggerPrefix = `[Platform Setup] -> `;
     this.loggerPrefix = loggerPrefix;
 
-    this.config = config as HomebridgeHomeWizardEnergySocketsConfig;
+    this.config = config as ConfigSchema;
 
     this.log.debug(loggerPrefix, 'Finished initializing platform:', config.name);
 
@@ -63,6 +61,16 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     // to start discovery of new accessories.
     this.api.on(APIEvent.DID_FINISH_LAUNCHING, () => {
       this.log.debug(loggerPrefix, 'Executed didFinishLaunching callback');
+
+      // Check if the config is valid. We do this here to prevent bugs later.
+      // It also helps the user in setting the config properly, if not used from within the UI, but manually adjusted in the config.json file.
+      if (!this.isValidConfigSchema(this.config)) {
+        this.log.error(
+          this.loggerPrefix,
+          `Please fix the issues in your config.json file for this plugin. Once fixed, restart Homebridge.`,
+        );
+        return;
+      }
 
       // Automatically discover Energy Sockets if no Energy Sockets are configured
       if (!this.config.energySockets?.length) {
@@ -100,7 +108,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
    */
   isStaleCachedAccessory(
     cachedAccessory: PlatformAccessory<HomeWizardEnergyPlatformAccessoryContext>,
-    energySocketsConfig: HomebridgeHomeWizardEnergySocketsConfig['energySockets'],
+    energySocketsConfig: ConfigSchema['energySockets'],
   ): boolean {
     if (!energySocketsConfig) return false;
 
@@ -203,6 +211,37 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
   }
 
   /**
+   * We should prevent the plugin from starting if the config is invalid.
+   */
+  isValidConfigSchema(config: ConfigSchema): boolean {
+    try {
+      configSchema.parse(config);
+
+      return true;
+    } catch (err) {
+      if (err instanceof ZodError) {
+        const mappedErrors = err.errors.map(err => {
+          return `${err.message} at ${err.path.join('.')}`;
+        });
+
+        this.log.error(
+          this.loggerPrefix,
+          `There is an error in your config: ${JSON.stringify(mappedErrors)}`,
+        );
+
+        return false;
+      }
+
+      this.log.error(
+        this.loggerPrefix,
+        `A unknown error happened while validation your config: ${JSON.stringify(err)}`,
+      );
+
+      return false;
+    }
+  }
+
+  /**
    * A type guard to verify if ip ánd name is set.
    */
   hasValidEnergySocketsConfig(
@@ -215,19 +254,9 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     const energySocketsConfig = this.config.energySockets;
 
     if (!energySocketsConfig || !energySocketsConfig.length) {
-      this.log.error(
+      this.log.info(
         this.loggerPrefix,
-        `handleEnergySocketsFromConfig is invoked, but config.energySockets has no array items. We are stopping.`,
-      );
-
-      return;
-    }
-
-    // This is a type guard to verify if ip ánd name is set
-    if (!this.hasValidEnergySocketsConfig(energySocketsConfig)) {
-      this.log.error(
-        this.loggerPrefix,
-        `handleEnergySocketsFromConfig is invoked, but not all config.energySockets have an ip and name. We are stopping.`,
+        `No Energy Sockets are configured, we stop. You can configure them in the config.json`,
       );
 
       return;
@@ -235,7 +264,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
 
     this.log.debug(
       this.loggerPrefix,
-      `Found ${energySocketsConfig.length} Energy Sockets in config, skipping automatic discovery...`,
+      `Found ${energySocketsConfig?.length} Energy Sockets in config, skipping automatic discovery...`,
     );
 
     // First, check if there are accessories in the cache that do not exist anymore in the config

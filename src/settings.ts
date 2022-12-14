@@ -9,6 +9,3 @@ export const PLATFORM_NAME = 'HomebridgeHomeWizardEnergySocket';
  * This must match the name of your plugin as defined the package.json
  */
 export const PLUGIN_NAME = 'homebridge-homewizard-energy-socket';
-
-export const DEFAULT_OUTLETINUSE_THRESHOLD = 5;
-export const DEFAULT_OUTLETINUSE_THRESHOLD_DURATION = 10;

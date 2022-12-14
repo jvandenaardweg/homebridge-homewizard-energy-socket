@@ -1,5 +1,3 @@
-import { PlatformConfig } from 'homebridge';
-
 /**
  * See config.schema.json for the configuration options.
  *
@@ -17,13 +15,6 @@ export interface EnergySocketConfig {
     /** When the power consumption is higher than the threshold for this duration, the "OutletInUse" characteristic will be shown as "Yes" in the Home app. Defaults to 10 seconds. */
     thresholdDuration?: number;
   };
-}
-
-/**
- * See config.schema.json for the configuration options.
- */
-export interface HomebridgeHomeWizardEnergySocketsConfig extends PlatformConfig {
-  energySockets?: EnergySocketConfig[];
 }
 
 export type WithRequiredProperty<Type, Key extends keyof Type> = Type & {
