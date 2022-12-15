@@ -1,4 +1,4 @@
-import { EnergySocketConfig } from '@/types';
+import { ConfigSchemaEnergySocket } from '@/config.schema';
 
 export const PLATFORM_MANUFACTURER = 'HomeWizard';
 
@@ -62,7 +62,7 @@ export interface EnergySocketAccessoryProperties {
   /** The initial active power value in watts. Example: `2.45` */
   activePower: number | null;
   /** The config options for this energy socket as defined by the user. Attached to this energy socket by IP. */
-  config?: EnergySocketConfig;
+  config?: ConfigSchemaEnergySocket;
 }
 
 /**

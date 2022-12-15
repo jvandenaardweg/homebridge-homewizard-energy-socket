@@ -15,7 +15,8 @@ import {
   HomeWizardEnergyPlatformAccessoryContext,
   PLATFORM_MANUFACTURER,
 } from '@/api/types';
-import { EnergySocketConfig } from './types';
+import { isNil } from './utils';
+import { ConfigSchemaEnergySocket } from './config.schema';
 
 const POLLING_INTERVAL = 1000; // in ms
 const SHOW_POLLING_ERRORS_INTERVAL = (15 * 60 * 1000) / POLLING_INTERVAL; // Show error every 15 minutes, if we poll every 1 second that's every 900 errors
@@ -31,7 +32,7 @@ export class EnergySocketAccessory {
   private properties: EnergySocketAccessoryProperties;
   private homeWizardApi: HomeWizardApi;
   private localStateResponse: HomeWizardApiStateResponse | undefined;
-  private config: EnergySocketConfig | undefined;
+  private config: ConfigSchemaEnergySocket | undefined;
 
   longPollErrorCount = 0;
   longPollCrossedThresholdAboveAt: Date | null = null;
@@ -87,10 +88,12 @@ export class EnergySocketAccessory {
     // We update this characteristic by polling the /data endpoint
     // Set the initial value by using the activePower property from the properties object
     // When there is no isActive property, we assume the outlet is always in use
-    this.service.setCharacteristic(
-      this.platform.Characteristic.OutletInUse,
-      this.initialIsOutletInUse,
-    );
+    if (!this.config?.outletInUse?.isActive) {
+      this.service.setCharacteristic(
+        this.platform.Characteristic.OutletInUse,
+        this.initialIsOutletInUse,
+      );
+    }
 
     // Register handlers for the On/Off Characteristic
     this.service
@@ -274,22 +277,24 @@ export class EnergySocketAccessory {
         true,
       );
 
+      if (!isNil(active_power_w)) {
+        this.properties.activePower = active_power_w;
+      }
+
       const isActivePowerAboveThreshold = this.getIsActivePowerAboveThreshold(active_power_w);
 
       // If threshold is met, set to true
       // And only set to true if the current isOutletInUse value is false
-      if (isActivePowerAboveThreshold && !this.isOutletInUse) {
-        if (!this.longPollCrossedThresholdAboveAt) {
-          this.longPollCrossedThresholdAboveAt = new Date();
-        }
+      if (isActivePowerAboveThreshold && !this.longPollCrossedThresholdAboveAt) {
+        this.longPollCrossedThresholdAboveAt = new Date();
+        this.longPollCrossedThresholdBelowAt = null;
       }
 
       // If threshold is not met, set to false
       // And only set to false if the current isOutletInUse value is true
-      if (!isActivePowerAboveThreshold && this.isOutletInUse) {
-        if (!this.longPollCrossedThresholdBelowAt) {
-          this.longPollCrossedThresholdBelowAt = new Date();
-        }
+      if (!isActivePowerAboveThreshold && !this.longPollCrossedThresholdBelowAt) {
+        this.longPollCrossedThresholdBelowAt = new Date();
+        this.longPollCrossedThresholdAboveAt = null;
       }
 
       // Specifically check for true, because it could be null
@@ -301,7 +306,7 @@ export class EnergySocketAccessory {
         this.setOutletInUse(true, active_power_w);
       }
 
-      // Specifically check for false, because it could be null
+      // Specifically check for true, because it could be null
       if (this.isThresholdCrossedBelowAfterDuration === true && this.isOutletInUse) {
         this.log.debug(
           `OutletInUse threshold crossed below ${this.config.outletInUse.threshold} watt for ${this.config.outletInUse.thresholdDuration} seconds, set OutletInUse to false`,
@@ -310,28 +315,37 @@ export class EnergySocketAccessory {
         this.setOutletInUse(false, active_power_w);
       }
 
-      // Verbose logging for debug purposes while developing
-      // this.log.debug(
-      //   'active_power_w',
-      //   this.properties.displayName,
-      //   active_power_w?.toFixed(3),
-      //   'outletInUse?',
-      //   this.isOutletInUse,
-      //   'longPollCrossedThresholdAboveAt',
-      //   this.longPollCrossedThresholdAboveAt?.toLocaleTimeString('nl-NL', {
-      //     hour: '2-digit',
-      //     minute: '2-digit',
-      //     second: '2-digit',
-      //   }),
-      //   'longPollCrossedThresholdBelowAt',
-      //   this.longPollCrossedThresholdBelowAt?.toLocaleTimeString('nl-NL', {
-      //     hour: '2-digit',
-      //     minute: '2-digit',
-      //     second: '2-digit',
-      //   }),
-      //   'crossedAbove?',
-      //   this.isThresholdCrossedAboveAfterDuration,
-      // );
+      if (this.config?.outletInUse?.verboseLogging) {
+        // Verbose logging for debug purposes while developing
+        this.log.debug(
+          `${active_power_w?.toFixed(3).padStart(8, '0')} watt`,
+          '|',
+          'Threshold:',
+          `${this.config.outletInUse.threshold} watt`,
+
+          '|',
+          'OutletInUse:',
+          this.isOutletInUse ? 'Yes' : 'No',
+          '|',
+
+          'Above threshold @',
+          this.longPollCrossedThresholdAboveAt?.toLocaleTimeString('nl-NL', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+          }) || 'Never',
+          '|',
+          'Below threshold @',
+          this.longPollCrossedThresholdBelowAt?.toLocaleTimeString('nl-NL', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+          }) || 'Never',
+          '|',
+          `After duration (${this.config.outletInUse.thresholdDuration} sec):`,
+          this.isThresholdCrossedAboveAfterDuration ? 'Yes' : 'No',
+        );
+      }
 
       // Reset the error count, because we received a response
       this.longPollErrorCount = 0;
@@ -414,7 +428,7 @@ export class EnergySocketAccessory {
 
       const isOn = response.power_on;
 
-      this.log.info(`Energy Socket On state is updated to ${isOn ? 'ON' : 'OFF'}`);
+      this.log.info(`On state is updated to ${isOn ? 'ON' : 'OFF'}`);
 
       // Keep the OutletInUse characteristic in sync with the ON/OFF state if the config for outletInUse is not set
       this.syncOutletInUseStateWithOnState(isOn);
@@ -448,12 +462,16 @@ export class EnergySocketAccessory {
 
       const isOn = response.power_on;
 
-      this.log.info(`Energy Socket On state is updated ${isOn ? 'ON' : 'OFF'}`);
+      this.log.info(`On state is fetched as ${isOn ? 'ON' : 'OFF'}`);
+
+      if (this.config?.outletInUse?.isActive) {
+        this.log.info(`Current power consumption is ${this.properties.activePower} watt`);
+      }
 
       // Keep the OutletInUse characteristic in sync with the ON state if the config for outletInUse is not set
       this.syncOutletInUseStateWithOnState(isOn);
 
-      return response.power_on;
+      return isOn;
     } catch (error) {
       const errorMessage = 'A unknown error occurred while getting the ON state';
 

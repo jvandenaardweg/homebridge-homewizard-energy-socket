@@ -21,14 +21,8 @@ import {
   TxtRecord,
 } from '@/api/types';
 import { HomeWizardApi } from './api';
-import { EnergySocketConfig, WithRequiredProperty } from './types';
 import { ZodError } from 'zod';
-import {
-  ConfigSchema,
-  configSchema,
-  DEFAULT_OUTLETINUSE_THRESHOLD,
-  DEFAULT_OUTLETINUSE_THRESHOLD_DURATION,
-} from './config.schema';
+import { ConfigSchema, configSchema } from './config.schema';
 
 /**
  * HomebridgePlatform
@@ -241,15 +235,6 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     }
   }
 
-  /**
-   * A type guard to verify if ip ánd name is set.
-   */
-  hasValidEnergySocketsConfig(
-    energySocketsConfig: EnergySocketConfig[],
-  ): energySocketsConfig is WithRequiredProperty<EnergySocketConfig, 'ip' | 'name'>[] {
-    return !!energySocketsConfig.every(energySocket => energySocket.ip && energySocket.name);
-  }
-
   async handleEnergySocketsFromConfig(): Promise<void> {
     const energySocketsConfig = this.config.energySockets;
 
@@ -430,17 +415,6 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
 
       const displayName = configName ? configName : `${productName} ${serialNumber}`; // "Energy Socket 3c12e7659852", which is used as the name in HomeKit
 
-      const energySocketConfigWithDefaults = {
-        ...energySocketConfig,
-        outletInUse: {
-          ...energySocketConfig?.outletInUse,
-          threshold: energySocketConfig?.outletInUse?.threshold || DEFAULT_OUTLETINUSE_THRESHOLD,
-          thresholdDuration:
-            energySocketConfig?.outletInUse?.thresholdDuration ||
-            DEFAULT_OUTLETINUSE_THRESHOLD_DURATION,
-        },
-      } satisfies EnergySocketConfig;
-
       const energySocketProperties = {
         uuid,
         ip,
@@ -452,7 +426,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
         productType,
         firmwareVersion,
         activePower,
-        config: energySocketConfigWithDefaults,
+        config: energySocketConfig,
       } satisfies EnergySocketAccessoryProperties;
 
       this.log.debug(

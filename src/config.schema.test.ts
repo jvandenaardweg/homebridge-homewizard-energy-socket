@@ -345,4 +345,54 @@ describe('config.schema.json', () => {
 
     expect(schemaValidation).not.toThrowError();
   });
+
+  it('should not error when outLetInUse.verboseLogging is true', () => {
+    const invalidConfigSchema = {
+      platform: PLATFORM_NAME,
+      name: 'HomeWizard Energy Socket',
+      energySockets: [
+        {
+          name: 'Energy Socket 1',
+          ip: '192.168.1.20',
+          outletInUse: {
+            isActive: true,
+            threshold: 5,
+            thresholdDuration: 60,
+            verboseLogging: true,
+          },
+        },
+      ],
+    };
+
+    const schemaValidation = () => {
+      configSchema.parse(invalidConfigSchema);
+    };
+
+    expect(schemaValidation).not.toThrowError();
+  });
+
+  it('should error when outLetInUse.verboseLogging is a string', () => {
+    const invalidConfigSchema = {
+      platform: PLATFORM_NAME,
+      name: 'HomeWizard Energy Socket',
+      energySockets: [
+        {
+          name: 'Energy Socket 1',
+          ip: '192.168.1.20',
+          outletInUse: {
+            isActive: true,
+            threshold: 5,
+            thresholdDuration: 60,
+            verboseLogging: 'true',
+          },
+        },
+      ],
+    };
+
+    const schemaValidation = () => {
+      configSchema.parse(invalidConfigSchema);
+    };
+
+    expect(schemaValidation).toThrowError("'verboseLogging' must be a boolean");
+  });
 });

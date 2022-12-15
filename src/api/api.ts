@@ -16,8 +16,8 @@ type RequestArgs = Parameters<typeof undiciRequest>;
 const request = (...args: RequestArgs) =>
   undiciRequest(args[0], {
     ...args[1],
-    bodyTimeout: 2000, // 2 seconds, we are on a local network, so all request should be fast
-    headersTimeout: 2000,
+    bodyTimeout: 1000, // 1 seconds, we are on a local network, so all request should be fast
+    headersTimeout: 1000,
   });
 
 export class HomeWizardApiError extends Error {

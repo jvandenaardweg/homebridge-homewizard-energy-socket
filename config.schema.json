@@ -15,6 +15,7 @@
         "description": "You'll see this name when you add the bridge in your Home app and also in the logs within Homebridge.",
         "default": "HomeWizard Energy Socket"
       },
+
       "energySockets": {
         "type": "array",
         "items": {
@@ -41,7 +42,7 @@
                   "type": "boolean",
                   "required": false,
                   "default": false,
-                  "description": "When enabled, the \"Outlet In Use\" characteristic will be shown as \"Yes\" if the device plugged in the Energy Socket is consuming a certain amount of power. You can trigger automations based on this characteristic.<br /><a href='https://github.com/jvandenaardweg/homebridge-homewizard-energy-socket/wiki/About-the-Outlet-In-Use-characteristic' target='_blank'>Learn more about it in the Wiki</a>."
+                  "description": "When enabled, the \"Outlet In Use\" characteristic will be shown as \"Yes\" if the device plugged in the Energy Socket is consuming a certain amount of power. You can trigger automations based on this characteristic. <a href='https://github.com/jvandenaardweg/homebridge-homewizard-energy-socket/wiki/About-the-Outlet-In-Use-characteristic' target='_blank'>Learn more about it in the Wiki</a>."
                 },
                 "threshold": {
                   "title": "Threshold (watts)",
@@ -57,17 +58,24 @@
                   }
                 },
                 "thresholdDuration": {
-                  "title": "Threshold Duration (seconds)",
+                  "title": "Duration (seconds)",
                   "placeholder": "Duration in seconds",
                   "type": "number",
                   "required": true,
                   "default": 10,
                   "minimum": 0,
                   "maximum": 86400,
-                  "description": "When the power consumption is higher than the threshold for this duration, the \"Outlet In Use\" characteristic will be shown as \"Yes\" in the Home app. Otherwise it shows \"No\". Defaults to 10 seconds.",
+                  "description": "Defaults to 10 seconds.",
                   "condition": {
                     "functionBody": "return model.energySockets[arrayIndices].outletInUse.isActive === true;"
                   }
+                },
+                "verboseLogging": {
+                  "title": "Verbose logging",
+                  "type": "boolean",
+                  "required": false,
+                  "description": "Enable to see more verbose logging for the power consumption of this Energy Socket. Useful for determining the right threshold. Default: false",
+                  "default": false
                 }
               }
             }
@@ -91,14 +99,10 @@
     {
       "type": "fieldset",
       "title": "Energy Sockets",
-      "description": "<strong>This config option is optional.</strong> Only use this if you want to bypass automatic discovery or use only the Energy Sockets you define here. When no Energy Sockets are defined here, the plugin will automatically discover all Energy Sockets on your network.",
+      "description": "<strong>This config option is optional.</strong> Only use this if you want to bypass automatic discovery or use only the Energy Sockets you define here. When no Energy Sockets are defined here, the plugin will automatically discover and use all Energy Sockets on your network.",
       "expandable": true,
       "orderable": false,
       "items": [
-        {
-          "type": "help",
-          "helpvalue": "<p class='help-block'>To make communication with the Energy Socket reliable, make sure that it has a static IP address. You can set it from your router admin interface. More about that in the <a href='https://github.com/jvandenaardweg/homebridge-homewizard-energy-socket#readme' target='_blank'>README</a>.</p>"
-        },
         {
           "title": "Energy Socket",
           "key": "energySockets",
@@ -123,17 +127,35 @@
                   ]
                 },
                 {
-                  "type": "flex",
-                  "flex-flow": "row wrap",
+                  "type": "div",
                   "items": [
                     {
                       "key": "energySockets[].outletInUse.isActive"
+                    }
+                  ]
+                },
+
+                {
+                  "type": "flex",
+                  "flex-flow": "row wrap",
+                  "condition": {
+                    "functionBody": "return model.energySockets[arrayIndices].outletInUse.isActive === true;"
+                  },
+                  "items": [
+                    {
+                      "key": "energySockets[].outletInUse.threshold",
+                      "description": ""
                     },
                     {
-                      "key": "energySockets[].outletInUse.threshold"
+                      "key": "energySockets[].outletInUse.thresholdDuration",
+                      "description": ""
                     },
                     {
-                      "key": "energySockets[].outletInUse.thresholdDuration"
+                      "type": "help",
+                      "helpvalue": "<p class='help-block'>When the power consumption <strong>rises above</strong> the <strong>threshold</strong> for the <strong>duration</strong>, the \"Outlet In Use\" characteristic will be set to \"Yes\" in the Home app. If it falls below the <strong>threshold</strong> for the <strong>duration</strong> it will be set to \"No\".</p>"
+                    },
+                    {
+                      "key": "energySockets[].outletInUse.verboseLogging"
                     }
                   ]
                 }

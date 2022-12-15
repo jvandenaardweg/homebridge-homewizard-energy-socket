@@ -38,7 +38,11 @@ export const configSchema = z.object({
         }),
         outletInUse: z
           .object({
-            isActive: z.boolean().optional(),
+            isActive: z
+              .boolean({
+                invalid_type_error: "'isActive' must be a boolean",
+              })
+              .optional(),
             threshold: z
               .number({
                 invalid_type_error: "'threshold' must be a number",
@@ -53,7 +57,13 @@ export const configSchema = z.object({
               .min(DEFAULT_OUTLETINUSE_THRESHOLD_DURATION_MIN)
               .max(DEFAULT_OUTLETINUSE_THRESHOLD_DURATION_MAX)
               .optional(), // set as optional, because it is only required when outletInUse.isActive is true. We'll use superRefine to validate this
+            verboseLogging: z
+              .boolean({
+                invalid_type_error: "'verboseLogging' must be a boolean",
+              })
+              .optional(),
           })
+          .optional()
 
           .superRefine((schema, ctx) => {
             const isActive = schema?.isActive;
@@ -84,12 +94,8 @@ export const configSchema = z.object({
       }),
     )
     .optional(),
-  // .refine(
-  //   array => Array.isArray(array) && array.length === 0,
-  //   () => ({
-  //     message: `Energy Sockets array cannot be empty. Either remove the array or add at least one Energy Socket`,
-  //   }),
-  // ),
 });
 
 export type ConfigSchema = z.infer<typeof configSchema> & PlatformConfig;
+
+export type ConfigSchemaEnergySocket = Exclude<ConfigSchema['energySockets'], undefined>[number];
