@@ -4,19 +4,16 @@ import {
   CharacteristicValue,
   PlatformAccessoryEvent,
 } from 'homebridge';
-import { HomeWizardApi } from '@/api/api';
 
 import { HomebridgeHomeWizardEnergySocket } from '@/platform';
-import {
-  EnergySocketAccessoryProperties,
-  HomeWizardApiIdentifyResponse,
-  HomeWizardApiStateResponse,
-  HomeWizardDeviceTypes,
-  HomeWizardEnergyPlatformAccessoryContext,
-  PLATFORM_MANUFACTURER,
-} from '@/api/types';
 import { isNil } from './utils';
 import { ConfigSchemaEnergySocket } from './config.schema';
+import { EnergySocketApi, StateResponse, IdentifyResponse } from 'homewizard-energy-api';
+import {
+  EnergySocketAccessoryProperties,
+  HomeWizardEnergyPlatformAccessoryContext,
+  PLATFORM_MANUFACTURER,
+} from './types';
 
 const POLLING_INTERVAL = 1000; // in ms
 const SHOW_POLLING_ERRORS_INTERVAL = (15 * 60 * 1000) / POLLING_INTERVAL; // Show error every 15 minutes, if we poll every 1 second that's every 900 errors
@@ -30,8 +27,8 @@ export class EnergySocketAccessory {
   private service: Service;
   private informationService: Service | undefined;
   private properties: EnergySocketAccessoryProperties;
-  private homeWizardApi: HomeWizardApi;
-  private localStateResponse: HomeWizardApiStateResponse | undefined;
+  private energySocketApi: EnergySocketApi;
+  private localStateResponse: StateResponse | undefined;
   private config: ConfigSchemaEnergySocket | undefined;
 
   longPollErrorCount = 0;
@@ -41,7 +38,7 @@ export class EnergySocketAccessory {
   constructor(
     private readonly platform: HomebridgeHomeWizardEnergySocket,
     private readonly accessory: PlatformAccessory<HomeWizardEnergyPlatformAccessoryContext>,
-    api: HomeWizardApi,
+    api: EnergySocketApi,
   ) {
     const properties = accessory.context.energySocket;
 
@@ -50,7 +47,7 @@ export class EnergySocketAccessory {
 
     this.log.debug(`Initializing platform accessory ${JSON.stringify(this.properties)}`);
 
-    this.homeWizardApi = api;
+    this.energySocketApi = api;
 
     const informationService = this.accessory.getService(
       this.platform.Service.AccessoryInformation,
@@ -227,7 +224,7 @@ export class EnergySocketAccessory {
     this.log.info(`OutletInUse is changed to ${value ? 'ON' : 'OFF'} (${activePower} watt)`);
   }
 
-  setLocalStateResponse(response: HomeWizardApiStateResponse): void {
+  setLocalStateResponse(response: StateResponse): void {
     this.localStateResponse = response;
   }
 
@@ -261,7 +258,7 @@ export class EnergySocketAccessory {
       return;
     }
 
-    if (this.properties.productType !== HomeWizardDeviceTypes.WIFI_ENERGY_SOCKET) {
+    if (this.properties.productType !== 'HWE-SKT') {
       // this should not happen, but acts as a type guard
       this.log.debug('Not a Energy Socket, not long polling the /data endpoint');
 
@@ -272,10 +269,7 @@ export class EnergySocketAccessory {
       // Get the current state of the device
       // We need to pass true as the second argument to disable logging, to not flood the Homebridge logs
       // We'll only log errors here
-      const { active_power_w } = await this.homeWizardApi.getData(
-        this.properties.productType,
-        true,
-      );
+      const { active_power_w } = await this.energySocketApi.getData();
 
       if (!isNil(active_power_w)) {
         this.properties.activePower = active_power_w;
@@ -387,9 +381,9 @@ export class EnergySocketAccessory {
    *
    * This method should blink the status light of the Energy Socket to help the user identify it.
    */
-  async handleIdentify(): Promise<HomeWizardApiIdentifyResponse> {
+  async handleIdentify(): Promise<IdentifyResponse> {
     try {
-      const response = await this.homeWizardApi.putIdentify(this.firmwareVersion);
+      const response = await this.energySocketApi.identify();
 
       return response;
     } catch (error) {
@@ -422,7 +416,7 @@ export class EnergySocketAccessory {
         );
       }
 
-      const response = await this.homeWizardApi.putState({
+      const response = await this.energySocketApi.updateState({
         power_on: value as boolean,
       });
 
@@ -454,7 +448,7 @@ export class EnergySocketAccessory {
    */
   async handleGetOn(): Promise<CharacteristicValue> {
     try {
-      const response = await this.homeWizardApi.getState();
+      const response = await this.energySocketApi.getState();
 
       // Put it in the local state, so we can keep track of the switch_lock setting, this must be enabled
       // If not, we can show a warning in the log

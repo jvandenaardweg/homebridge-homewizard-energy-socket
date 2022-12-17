@@ -12,17 +12,16 @@ import { Bonjour, Service as BonjourService } from 'bonjour-service';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from '@/settings';
 import { EnergySocketAccessory } from '@/energy-socket-accessory';
-import {
-  EnergySocketAccessoryProperties,
-  HomeWizardDeviceTypes,
-  HomeWizardEnergyPlatformAccessoryContext,
-  MDNS_DISCOVERY_PROTOCOL,
-  MDNS_DISCOVERY_TYPE,
-  TxtRecord,
-} from '@/api/types';
-import { HomeWizardApi } from './api';
 import { ZodError } from 'zod';
 import { ConfigSchema, configSchema } from './config.schema';
+import {
+  EnergySocketApi,
+  MdnsTxtRecord,
+  MDNS_DISCOVERY_PROTOCOL,
+  MDNS_DISCOVERY_TYPE,
+  SupportedDevices,
+} from 'homewizard-energy-api';
+import { EnergySocketAccessoryProperties, HomeWizardEnergyPlatformAccessoryContext } from './types';
 
 /**
  * HomebridgePlatform
@@ -158,22 +157,22 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     });
   }
 
-  isDeviceApiEnabled(txtRecord: TxtRecord): boolean {
+  isDeviceApiEnabled(txtRecord: MdnsTxtRecord): boolean {
     return txtRecord.api_enabled === '1';
   }
 
-  isDeviceProductTypeSupported(txtRecord: TxtRecord): boolean {
-    return txtRecord.product_type === HomeWizardDeviceTypes.WIFI_ENERGY_SOCKET;
+  isDeviceProductTypeSupported(txtRecord: MdnsTxtRecord): boolean {
+    return txtRecord.product_type === 'HWE-SKT';
   }
 
   async handleDiscoveredService(service: BonjourService): Promise<void> {
-    const txtRecord = service.txt as TxtRecord;
+    const txtRecord = service.txt as MdnsTxtRecord;
 
     // Skip if the device is not an Energy Socket
     if (!this.isDeviceProductTypeSupported(txtRecord)) {
       this.log.debug(
         this.loggerPrefix,
-        `Found a device that is not an Energy Socket (${HomeWizardDeviceTypes.WIFI_ENERGY_SOCKET}), skipping`,
+        `Found a device that is not an Energy Socket, skipping`,
         JSON.stringify(txtRecord),
       );
       return;
@@ -297,7 +296,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     }
   }
 
-  addAccessory(energySocketProperties: EnergySocketAccessoryProperties, api: HomeWizardApi) {
+  addAccessory(energySocketProperties: EnergySocketAccessoryProperties, api: EnergySocketApi) {
     try {
       const existingAccessory = this.cachedAccessories.find(
         accessory => accessory.UUID === energySocketProperties.uuid,
@@ -358,7 +357,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
 
   attachAccessoryToPlatform(
     accessory: PlatformAccessory<HomeWizardEnergyPlatformAccessoryContext>,
-    api: HomeWizardApi,
+    api: EnergySocketApi,
   ): void {
     this.log.debug(this.loggerPrefix, 'Attaching accessory to platform:', accessory.displayName);
 
@@ -371,7 +370,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     configName?: string,
   ): Promise<{
     energySocketProperties: EnergySocketAccessoryProperties;
-    api: HomeWizardApi;
+    api: EnergySocketApi;
   }> {
     this.log.info(
       this.loggerPrefix,
@@ -388,15 +387,13 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     const apiUrl = `http://${ip}`;
 
     try {
-      const api = new HomeWizardApi(apiUrl, {
-        logger: this.log,
-      });
+      const api = new EnergySocketApi(apiUrl);
 
       // Call the basic endpoint to get the firmware version
       // this is not available in the txt record, but required for our accessory
       const [basicInformation, data] = await Promise.all([
         api.getBasicInformation(),
-        api.getData(HomeWizardDeviceTypes.WIFI_ENERGY_SOCKET),
+        api.getData(),
       ]);
 
       // Get the initial active power value, even if
@@ -404,7 +401,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
 
       const firmwareVersion = basicInformation.firmware_version;
       const productName = basicInformation.product_name;
-      const productType = basicInformation.product_type as HomeWizardDeviceTypes; // TODO: check for valid product type
+      const productType = basicInformation.product_type as SupportedDevices; // TODO: check for valid product type
       const serialNumber = basicInformation.serial;
       const apiVersion = basicInformation.api_version;
 
@@ -457,7 +454,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
    */
   async getEnergySocketPropertiesFromService(service: BonjourService): Promise<{
     energySocketProperties: EnergySocketAccessoryProperties;
-    api: HomeWizardApi;
+    api: EnergySocketApi;
   }> {
     this.log.debug(
       this.loggerPrefix,

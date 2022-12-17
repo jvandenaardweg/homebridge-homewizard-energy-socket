@@ -5,13 +5,12 @@ import { mockIdentifyResponse } from './api/mocks/data/identify';
 import { mockBasicInformationResponse } from './api/mocks/data/basic';
 import { accessoryMock, platformMock } from './mocks/platform';
 import { mockStateResponse } from './api/mocks/data/state';
-import { HomeWizardApi } from './api';
-import { loggerMock } from './mocks/logger';
+import { EnergySocketApi } from 'homewizard-energy-api';
 
 let mockApiAgent: MockAgent;
 let mockApiPool: Interceptable;
 
-let mockApi: HomeWizardApi;
+let mockApi: EnergySocketApi;
 
 describe('EnergySocketAccessory', () => {
   beforeEach(() => {
@@ -27,9 +26,7 @@ describe('EnergySocketAccessory', () => {
 
     mockApiPool = mockApiAgent.get(mockApiUrl);
 
-    mockApi = new HomeWizardApi(mockApiUrl, {
-      logger: loggerMock,
-    });
+    mockApi = new EnergySocketApi(mockApiUrl);
   });
 
   afterEach(async () => {
