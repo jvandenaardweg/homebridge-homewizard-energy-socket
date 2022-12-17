@@ -14,9 +14,7 @@ import {
   HomeWizardEnergyPlatformAccessoryContext,
   PLATFORM_MANUFACTURER,
 } from './types';
-
-const POLLING_INTERVAL = 1000; // in ms
-const SHOW_POLLING_ERRORS_INTERVAL = (15 * 60 * 1000) / POLLING_INTERVAL; // Show error every 15 minutes, if we poll every 1 second that's every 900 errors
+import { SHOW_POLLING_ERRORS_INTERVAL } from './settings';
 
 /**
  * Platform Accessory
@@ -265,11 +263,12 @@ export class EnergySocketAccessory {
       return;
     }
 
-    try {
-      // Get the current state of the device
-      // We need to pass true as the second argument to disable logging, to not flood the Homebridge logs
-      // We'll only log errors here
-      const { active_power_w } = await this.energySocketApi.getData();
+    const polling = this.energySocketApi.polling;
+
+    polling.getData.start();
+
+    polling.getData.on('response', response => {
+      const { active_power_w } = response;
 
       if (!isNil(active_power_w)) {
         this.properties.activePower = active_power_w;
@@ -294,7 +293,7 @@ export class EnergySocketAccessory {
       // Specifically check for true, because it could be null
       if (this.isThresholdCrossedAboveAfterDuration === true && !this.isOutletInUse) {
         this.log.debug(
-          `OutletInUse threshold crossed above ${this.config.outletInUse.threshold} watt for ${this.config.outletInUse.thresholdDuration} seconds, set OutletInUse to true`,
+          `OutletInUse threshold crossed above ${this.config?.outletInUse?.threshold} watt for ${this.config?.outletInUse?.thresholdDuration} seconds, set OutletInUse to true`,
         );
 
         this.setOutletInUse(true, active_power_w);
@@ -303,7 +302,7 @@ export class EnergySocketAccessory {
       // Specifically check for true, because it could be null
       if (this.isThresholdCrossedBelowAfterDuration === true && this.isOutletInUse) {
         this.log.debug(
-          `OutletInUse threshold crossed below ${this.config.outletInUse.threshold} watt for ${this.config.outletInUse.thresholdDuration} seconds, set OutletInUse to false`,
+          `OutletInUse threshold crossed below ${this.config?.outletInUse?.threshold} watt for ${this.config?.outletInUse?.thresholdDuration} seconds, set OutletInUse to false`,
         );
 
         this.setOutletInUse(false, active_power_w);
@@ -343,10 +342,9 @@ export class EnergySocketAccessory {
 
       // Reset the error count, because we received a response
       this.longPollErrorCount = 0;
+    });
 
-      // Always run the setTimeout after above logic
-      setTimeout(this.longPollData.bind(this), POLLING_INTERVAL);
-    } catch (error) {
+    polling.getData.on('error', error => {
       let errorMessage = 'A unknown error happened while polling the /data endpoint.';
 
       if (error instanceof Error) {
@@ -369,10 +367,7 @@ export class EnergySocketAccessory {
         // Continue counting
         this.longPollErrorCount += 1;
       }
-
-      // Continue polling, device is probably offline, maybe it will come back online
-      setTimeout(this.longPollData.bind(this), POLLING_INTERVAL);
-    }
+    });
   }
 
   /**

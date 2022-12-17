@@ -10,7 +10,7 @@ import {
 } from 'homebridge';
 import { Bonjour, Service as BonjourService } from 'bonjour-service';
 
-import { PLATFORM_NAME, PLUGIN_NAME } from '@/settings';
+import { PLATFORM_NAME, PLUGIN_NAME, POLLING_INTERVAL } from '@/settings';
 import { EnergySocketAccessory } from '@/energy-socket-accessory';
 import { ZodError } from 'zod';
 import { ConfigSchema, configSchema } from './config.schema';
@@ -387,7 +387,11 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
     const apiUrl = `http://${ip}`;
 
     try {
-      const api = new EnergySocketApi(apiUrl);
+      const api = new EnergySocketApi(apiUrl, {
+        polling: {
+          interval: POLLING_INTERVAL,
+        },
+      });
 
       // Call the basic endpoint to get the firmware version
       // this is not available in the txt record, but required for our accessory
