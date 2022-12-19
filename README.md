@@ -14,9 +14,10 @@ This Homebridge plugin exposes your [HomeWizard Energy Sockets](https://www.home
 
 - Control Energy Sockets from within the Home App
 - Use Energy Sockets in your Home Automations
+- Use the [Outlet In Use](https://github.com/jvandenaardweg/homebridge-homewizard-energy-socket/wiki/About-the-Outlet-In-Use-characteristic) characteristic to trigger automations based on power consumption
 - Automatically discovers Energy Sockets in your network
 
-This plugin does not provide a way to show the current power consumption of the Energy Sockets. This is a limitation of HomeKit and not of this plugin.
+This plugin does not provide a way to show the current power consumption of the Energy Sockets. This is a limitation of HomeKit and not of this plugin. I do however have a way to trigger automations based on the [Outlet In Use](https://github.com/jvandenaardweg/homebridge-homewizard-energy-socket/wiki/About-the-Outlet-In-Use-characteristic) characteristic.
 
 ## Getting started
 
