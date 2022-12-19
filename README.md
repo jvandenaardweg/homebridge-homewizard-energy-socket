@@ -2,8 +2,13 @@
 <img src="https://github.com/homebridge/branding/raw/master/logos/homebridge-wordmark-logo-vertical.png" width="150">
 </p>
 <p align="center">
-<a href="https://badge.fury.io/js/homebridge-homewizard-energy-socket"><img src="https://badge.fury.io/js/homebridge-homewizard-energy-socket.svg" alt="npm version" /></a>
-<a href="https://github.com/jvandenaardweg/homebridge-homewizard-energy-socket/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="mit license" /></a>
+  <a href="https://npmjs.com/package/homebridge-homewizard-energy-socket" title="NPM package"><img alt="npm" src="https://img.shields.io/npm/v/homebridge-homewizard-energy-socket?color=%234c1&label=npm%20package" /></a>
+  &nbsp;
+  <a href="https://github.com/jvandenaardweg/homebridge-homewizard-energy-socket/actions" title="Build and Test result"><img alt="github" src="http://img.shields.io/github/actions/workflow/status/jvandenaardweg/homebridge-homewizard-energy-socket/build-and-test.yml?branch=main&color=%234c1" /></a>
+  &nbsp;
+  <a href="https://github.com/sponsors/jvandenaardweg" title="Sponsor me on GitHub"><img src="https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23db61a2" alt="github sponsor" /></a>
+  &nbsp;
+  <a href="https://github.com/jvandenaardweg/homebridge-homewizard-energy-socket/blob/main/LICENSE" title="MIT license"><img alt="mit license" src="https://img.shields.io/badge/license-MIT-blue.svg" /></a>
 </p>
 
 # Homebridge plugin for HomeWizard Energy Socket
