@@ -273,6 +273,10 @@ export class EnergySocketAccessory {
     polling.getData.start();
 
     polling.getData.on('response', response => {
+      const threshold = this.config?.outletInUse;
+      const thresholdDuration = this.config?.outletInUse;
+      const verboseLogging = this.config?.outletInUse?.verboseLogging;
+
       const { active_power_w } = response;
 
       if (!isNil(active_power_w)) {
@@ -298,7 +302,7 @@ export class EnergySocketAccessory {
       // Specifically check for true, because it could be null
       if (this.isThresholdCrossedAboveAfterDuration === true && !this.isOutletInUse) {
         this.log.debug(
-          `OutletInUse threshold crossed above ${this.config?.outletInUse?.threshold} watt for ${this.config?.outletInUse?.thresholdDuration} seconds, set OutletInUse to true`,
+          `OutletInUse threshold crossed above ${threshold} watt for ${thresholdDuration} seconds, set OutletInUse to true`,
         );
 
         this.setOutletInUse(true, active_power_w);
@@ -307,19 +311,19 @@ export class EnergySocketAccessory {
       // Specifically check for true, because it could be null
       if (this.isThresholdCrossedBelowAfterDuration === true && this.isOutletInUse) {
         this.log.debug(
-          `OutletInUse threshold crossed below ${this.config?.outletInUse?.threshold} watt for ${this.config?.outletInUse?.thresholdDuration} seconds, set OutletInUse to false`,
+          `OutletInUse threshold crossed below ${threshold} watt for ${thresholdDuration} seconds, set OutletInUse to false`,
         );
 
         this.setOutletInUse(false, active_power_w);
       }
 
-      if (this.config?.outletInUse?.verboseLogging) {
+      if (verboseLogging) {
         // Verbose logging for debug purposes to determine your best threshold
         this.log.debug(
           `${active_power_w?.toFixed(3).padStart(8, '0')} watt`,
           '|',
           'Threshold:',
-          `${this.config.outletInUse.threshold} watt`,
+          `${threshold} watt`,
 
           '|',
           'OutletInUse:',
@@ -339,7 +343,7 @@ export class EnergySocketAccessory {
             second: '2-digit',
           }) || 'Never',
           '|',
-          `After duration (${this.config.outletInUse.thresholdDuration} sec):`,
+          `After duration (${thresholdDuration} sec):`,
           this.isThresholdCrossedAboveAfterDuration ? 'Yes' : 'No',
         );
       }
@@ -485,7 +489,6 @@ export class EnergySocketAccessory {
 
     this.log.error(errorMessage);
 
-    // TODO: handle scenario where the device is offline, is fetched in homekit and shows as non responsive. But then comes back online again. The status is not being updated and api keeps coming back as 403
     return new this.platform.api.hap.HapStatusError(
       this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE,
     );
