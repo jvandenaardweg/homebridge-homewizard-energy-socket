@@ -233,7 +233,12 @@ export class EnergySocketAccessory {
    */
   syncOutletInUseStateWithOnState(isOn: boolean) {
     if (!this.config?.outletInUse?.isActive) {
-      this.log.debug(`Energy Socket OutletInUse state is updated to ${isOn ? 'ON' : 'OFF'}`);
+      // If OutletInUse is already set to the same value, we don't need to update it
+      if (this.isOutletInUse === isOn) {
+        return;
+      }
+
+      this.log.info(`OutletInUse state is synced to ${isOn ? 'ON' : 'OFF'}`);
       this.service.setCharacteristic(this.platform.Characteristic.OutletInUse, isOn);
     }
   }
@@ -309,7 +314,7 @@ export class EnergySocketAccessory {
       }
 
       if (this.config?.outletInUse?.verboseLogging) {
-        // Verbose logging for debug purposes while developing
+        // Verbose logging for debug purposes to determine your best threshold
         this.log.debug(
           `${active_power_w?.toFixed(3).padStart(8, '0')} watt`,
           '|',
@@ -320,7 +325,6 @@ export class EnergySocketAccessory {
           'OutletInUse:',
           this.isOutletInUse ? 'Yes' : 'No',
           '|',
-
           'Above threshold @',
           this.longPollCrossedThresholdAboveAt?.toLocaleTimeString('nl-NL', {
             hour: '2-digit',
@@ -357,7 +361,11 @@ export class EnergySocketAccessory {
       // Only show the error if it's the first error or the last error
       // The first error to not wait for the SHOW_POLLING_ERRORS_INTERVAL to show any error
       if (isErrorCountAfterInterval || isFirstError) {
-        this.log.error('Error during polling the data endpoint', errorMessage);
+        this.log.error(
+          `Error during polling the data endpoint: ${errorMessage}.${
+            this.longPollErrorCount ? ` Total errors: ${this.longPollErrorCount}` : ''
+          }`,
+        );
       }
 
       if (isErrorCountAfterInterval) {
