@@ -9,6 +9,7 @@ export default defineConfig({
     coverage: {
       provider: 'istanbul',
       all: true,
+      exclude: ['**/vitest.setup.ts', '**/mocks/**'],
     },
   },
   resolve: {
