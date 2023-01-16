@@ -87,7 +87,7 @@
     "resolve-tspaths": "^0.8.3",
     "rimraf": "^3.0.2",
     "typescript": "^4.9.4",
-    "vitest": "^0.26.3"
+    "vitest": "^0.27.1"
   },
   "dependencies": {
     "bonjour-service": "^1.0.14",
