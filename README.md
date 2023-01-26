@@ -6,6 +6,8 @@
   &nbsp;
   <a href="https://github.com/jvandenaardweg/homebridge-homewizard-energy-socket/actions" title="Build and Test result"><img alt="github" src="http://img.shields.io/github/actions/workflow/status/jvandenaardweg/homebridge-homewizard-energy-socket/build-and-test.yml?branch=main&color=%234c1" /></a>
   &nbsp;
+  <a href="https://github.com/homebridge/homebridge/wiki/Verified-Plugins" title="Verified by Homebridge"><img alt="github" src="https://badgen.net/badge/homebridge/verified/purple" /></a>
+  &nbsp;
   <a href="https://github.com/sponsors/jvandenaardweg" title="Sponsor me on GitHub"><img src="https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23db61a2" alt="github sponsor" /></a>
   &nbsp;
   <a href="https://github.com/jvandenaardweg/homebridge-homewizard-energy-socket/blob/main/LICENSE" title="MIT license"><img alt="mit license" src="https://img.shields.io/badge/license-MIT-blue.svg" /></a>
@@ -13,7 +15,7 @@
 
 # Homebridge plugin for HomeWizard Energy Socket
 
-This Homebridge plugin exposes your [HomeWizard Energy Sockets](https://www.homewizard.com/shop/wi-fi-energy-socket/) to Apple HomeKit. So you can use the Home App to switch your Energy Sockets on or off and integrate the Energy Sockets into your Home Automations.
+This verified Homebridge plugin exposes your [HomeWizard Energy Sockets](https://www.homewizard.com/shop/wi-fi-energy-socket/) to Apple HomeKit. So you can use the Home App to switch your Energy Sockets on or off and integrate the Energy Sockets into your Home Automations.
 
 ## Features
 
