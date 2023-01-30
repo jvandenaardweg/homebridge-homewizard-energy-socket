@@ -74,7 +74,7 @@
     "@types/validator": "^13.7.10",
     "@typescript-eslint/eslint-plugin": "^5.48.1",
     "@typescript-eslint/parser": "^5.48.2",
-    "@vitest/coverage-istanbul": "^0.26.3",
+    "@vitest/coverage-istanbul": "^0.28.3",
     "dotenv-cli": "^7.0.0",
     "eslint": "^8.32.0",
     "homebridge": "^1.6.0",
