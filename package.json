@@ -72,7 +72,7 @@
   "devDependencies": {
     "@types/node": "^18.11.18",
     "@types/validator": "^13.7.11",
-    "@typescript-eslint/eslint-plugin": "^5.48.1",
+    "@typescript-eslint/eslint-plugin": "^5.50.0",
     "@typescript-eslint/parser": "^5.49.0",
     "@vitest/coverage-istanbul": "^0.28.3",
     "dotenv-cli": "^7.0.0",
