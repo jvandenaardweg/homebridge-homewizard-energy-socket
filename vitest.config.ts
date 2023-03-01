@@ -10,7 +10,7 @@ export default defineConfig({
       provider: 'istanbul',
       all: true,
       exclude: ['**/vitest.setup.ts', '**/mocks/**'],
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text'],
     },
   },
   resolve: {
