@@ -94,7 +94,7 @@
     "homewizard-energy-api": "^1.4.2",
     "undici": "^5.20.0",
     "validator": "^13.9.0",
-    "zod": "^3.20.6"
+    "zod": "^3.21.4"
   },
   "release-it": {
     "git": {
