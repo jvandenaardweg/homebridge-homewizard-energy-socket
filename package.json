@@ -70,7 +70,7 @@
     "apple home"
   ],
   "devDependencies": {
-    "@types/node": "^18.14.0",
+    "@types/node": "^20.4.5",
     "@types/validator": "^13.7.12",
     "@typescript-eslint/eslint-plugin": "^5.61.0",
     "@typescript-eslint/parser": "^5.59.8",
