@@ -71,7 +71,7 @@
   ],
   "devDependencies": {
     "@types/node": "^20.4.5",
-    "@types/validator": "^13.7.12",
+    "@types/validator": "^13.11.2",
     "@typescript-eslint/eslint-plugin": "^5.61.0",
     "@typescript-eslint/parser": "^5.62.0",
     "@vitest/coverage-istanbul": "^0.29.8",
@@ -93,7 +93,7 @@
     "bonjour-service": "^1.1.1",
     "homewizard-energy-api": "^1.4.2",
     "undici": "^5.22.1",
-    "validator": "^13.9.0",
+    "validator": "^13.11.0",
     "zod": "^3.21.4"
   },
   "release-it": {
