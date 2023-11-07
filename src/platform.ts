@@ -12,6 +12,7 @@ import { Bonjour, Service as BonjourService } from 'bonjour-service';
 
 import { PLATFORM_NAME, PLUGIN_NAME, POLLING_INTERVAL } from '@/settings';
 import { EnergySocketAccessory } from '@/energy-socket-accessory';
+import { EnergySocketAccessoryPowerStatus } from '@/energy-socket-accessory-power-status';
 import { ZodError } from 'zod';
 import { ConfigSchema, configSchema } from './config.schema';
 import {
@@ -363,6 +364,7 @@ export class HomebridgeHomeWizardEnergySocket implements DynamicPlatformPlugin {
 
     // Create the accessory handler for the restored accessory
     new EnergySocketAccessory(this, accessory, api);
+    new EnergySocketAccessoryPowerStatus(this, accessory, api);
   }
 
   async getEnergySocketPropertiesFromIp(
