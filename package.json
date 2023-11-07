@@ -76,7 +76,7 @@
     "@typescript-eslint/parser": "^5.62.0",
     "@vitest/coverage-istanbul": "^0.29.8",
     "dotenv-cli": "^7.3.0",
-    "eslint": "^8.35.0",
+    "eslint": "^8.53.0",
     "homebridge": "^1.6.1",
     "husky": "^8.0.3",
     "is-ci": "^3.0.1",
