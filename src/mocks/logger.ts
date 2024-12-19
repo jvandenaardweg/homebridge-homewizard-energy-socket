@@ -7,4 +7,5 @@ export const loggerMock = {
   error: vi.fn(),
   debug: vi.fn(),
   log: vi.fn(),
+  success: vi.fn(),
 } satisfies Logger;
