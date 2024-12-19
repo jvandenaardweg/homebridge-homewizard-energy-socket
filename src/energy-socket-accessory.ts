@@ -35,6 +35,7 @@ export class EnergySocketAccessory {
   longPollErrorCount = 0;
   longPollCrossedThresholdAboveAt: Date | null = null;
   longPollCrossedThresholdBelowAt: Date | null = null;
+  private statePollingErrorCount = 0;
 
   // Add a method to allow setting the service for testing
   protected setService(service: Service) {
@@ -525,6 +526,8 @@ export class EnergySocketAccessory {
 
     try {
       const response = await this.energySocketApi.getState();
+      // Reset error count on successful response
+      this.statePollingErrorCount = 0;
 
       // Keep the local state in sync
       this.setLocalStateResponse(response);
@@ -543,10 +546,33 @@ export class EnergySocketAccessory {
         this.syncOutletInUseStateWithOnState(response.power_on);
       }
     } catch (error) {
-      if (error instanceof Undici.errors.HeadersTimeoutError) {
-        this.log.error('Error during state polling. Device is probably offline.', error);
+      const isFirstError = this.statePollingErrorCount === 0;
+      const isErrorCountAfterInterval = this.statePollingErrorCount > SHOW_POLLING_ERRORS_INTERVAL;
+
+      // Only show the error if it's the first error or after the interval
+      if (isErrorCountAfterInterval || isFirstError) {
+        if (error instanceof Undici.errors.HeadersTimeoutError) {
+          this.log.error(
+            `Error during state polling. Device is probably offline.${
+              this.statePollingErrorCount ? ` Total errors: ${this.statePollingErrorCount}` : ''
+            }`,
+          );
+        } else {
+          this.log.error(
+            `Error polling state:${
+              this.statePollingErrorCount ? ` Total errors: ${this.statePollingErrorCount}` : ''
+            }`,
+            error,
+          );
+        }
+
+        if (isErrorCountAfterInterval) {
+          // Reset the counter after showing the error
+          this.statePollingErrorCount = 0;
+        }
       } else {
-        this.log.error('Error polling state:', error);
+        // Continue counting
+        this.statePollingErrorCount += 1;
       }
     }
 
