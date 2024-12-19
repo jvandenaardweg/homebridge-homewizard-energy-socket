@@ -538,9 +538,9 @@ export class EnergySocketAccessory {
       }
     } catch (error) {
       if (error instanceof Undici.errors.HeadersTimeoutError) {
-        this.log.debug('Error during state polling. Device is probably offline.', error);
+        this.log.error('Error during state polling. Device is probably offline.', error);
       } else {
-        this.log.debug('Error polling state:', error);
+        this.log.error('Error polling state:', error);
       }
     }
 
