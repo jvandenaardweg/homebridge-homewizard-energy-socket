@@ -3,7 +3,7 @@ import { HomeWizardEnergyPlatformAccessoryContext } from '@/api/types';
 import { HomebridgeHomeWizardEnergySocket } from '@/platform';
 import { Accessory } from 'hap-nodejs';
 import { PlatformAccessory } from 'homebridge';
-import { mockUUID, mockAccessoryContext, mockDisplayName } from './energy-socket-accessory';
+import { mockAccessoryContext, mockDisplayName, mockUUID } from './energy-socket-accessory';
 import { loggerMock } from './logger';
 
 // export const mockSetCharacteristics = vi.fn((category, value) => {
@@ -36,21 +36,23 @@ const mockGetCharacteristics = category => {
   };
 };
 
-const getServiceMock = () => {
+export const getServiceMock = () => {
   // const getServiceMock = category => {
   // console.log('get service', category);
   return {
     setCharacteristic: mockSetCharacteristics,
     getCharacteristic: mockGetCharacteristics,
+    updateCharacteristic: vi.fn(),
   };
 };
 
-const addServiceMock = () => {
+export const addServiceMock = () => {
   // const addServiceMock = category => {
   // console.log('add service', category);
   return {
     setCharacteristic: mockSetCharacteristics,
     getCharacteristic: mockGetCharacteristics,
+    updateCharacteristic: vi.fn(),
   };
 };
 
@@ -88,6 +90,11 @@ export const platformMock = {
     OutletInUse: 'OutletInUse',
   },
 } as unknown as HomebridgeHomeWizardEnergySocket;
+
+export const mockServices = {
+  getService: getServiceMock,
+  addService: addServiceMock,
+};
 
 export const accessoryMock = {
   context: {
