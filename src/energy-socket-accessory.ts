@@ -1,20 +1,20 @@
 import {
-  Service,
-  PlatformAccessory,
   CharacteristicValue,
+  PlatformAccessory,
   PlatformAccessoryEvent,
+  Service,
 } from 'homebridge';
 
 import { HomebridgeHomeWizardEnergySocket } from '@/platform';
-import { isNil } from './utils';
+import { EnergySocketApi, IdentifyResponse, StateResponse } from 'homewizard-energy-api';
 import { ConfigSchemaEnergySocket } from './config.schema';
-import { EnergySocketApi, StateResponse, IdentifyResponse } from 'homewizard-energy-api';
+import { POLLING_STATE_INTERVAL, SHOW_POLLING_ERRORS_INTERVAL } from './settings';
 import {
   EnergySocketAccessoryProperties,
   HomeWizardEnergyPlatformAccessoryContext,
   PLATFORM_MANUFACTURER,
 } from './types';
-import { SHOW_POLLING_ERRORS_INTERVAL } from './settings';
+import { isNil } from './utils';
 
 /**
  * Platform Accessory
@@ -22,16 +22,23 @@ import { SHOW_POLLING_ERRORS_INTERVAL } from './settings';
  * Each accessory may expose multiple services of different service types.
  */
 export class EnergySocketAccessory {
-  private service: Service;
+  protected service: Service;
   private informationService: Service | undefined;
   private properties: EnergySocketAccessoryProperties;
   private energySocketApi: EnergySocketApi;
   private localStateResponse: StateResponse | undefined;
   private config: ConfigSchemaEnergySocket | undefined;
+  private localStatePolling = false;
+  private pollingTimeout: NodeJS.Timeout | null = null;
 
   longPollErrorCount = 0;
   longPollCrossedThresholdAboveAt: Date | null = null;
   longPollCrossedThresholdBelowAt: Date | null = null;
+
+  // Add a method to allow setting the service for testing
+  protected setService(service: Service) {
+    this.service = service;
+  }
 
   constructor(
     private readonly platform: HomebridgeHomeWizardEnergySocket,
@@ -107,6 +114,8 @@ export class EnergySocketAccessory {
 
     // Start long polling the /data endpoint to get the current power usage
     this.longPollData();
+
+    this.startStatePolling();
   }
 
   get log() {
@@ -207,6 +216,14 @@ export class EnergySocketAccessory {
 
   get modelName(): string {
     return `${this.properties.productName} (${this.properties.productType})`;
+  }
+
+  getCurrentOnState() {
+    return this.service.getCharacteristic(this.platform.Characteristic.On).value;
+  }
+
+  updateCurrentOnState(value: CharacteristicValue) {
+    this.service.updateCharacteristic(this.platform.Characteristic.On, value);
   }
 
   getIsActivePowerAboveThreshold(activePower: number | null | undefined): boolean {
@@ -492,5 +509,57 @@ export class EnergySocketAccessory {
     return new this.platform.api.hap.HapStatusError(
       this.platform.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE,
     );
+  }
+
+  async pollState() {
+    if (!this.localStatePolling) {
+      return;
+    }
+
+    try {
+      const response = await this.energySocketApi.getState();
+
+      // Keep the local state in sync
+      this.setLocalStateResponse(response);
+
+      const currentOnState = this.getCurrentOnState();
+
+      // Only update if the state has changed to avoid unnecessary updates
+      if (currentOnState !== response.power_on) {
+        this.log.debug(`State polling detected change: ${response.power_on ? 'ON' : 'OFF'}`);
+        this.log.debug(
+          `Current On state "${currentOnState}", will be updated to "${response.power_on}"`,
+        );
+
+        this.updateCurrentOnState(response.power_on);
+
+        this.syncOutletInUseStateWithOnState(response.power_on);
+      }
+    } catch (error) {
+      this.log.debug('Error polling state:', error);
+    }
+
+    // Store the timeout ID so we can clear it later
+    this.pollingTimeout = setTimeout(this.pollState.bind(this), POLLING_STATE_INTERVAL);
+  }
+
+  async startStatePolling() {
+    this.log.debug('Starting state polling');
+    if (this.localStatePolling) {
+      this.log.debug('State polling already started');
+      return;
+    }
+
+    this.localStatePolling = true;
+    await this.pollState();
+  }
+
+  stopStatePolling() {
+    this.log.debug('Stopping state polling');
+    this.localStatePolling = false;
+    if (this.pollingTimeout) {
+      clearTimeout(this.pollingTimeout);
+      this.pollingTimeout = null;
+    }
   }
 }

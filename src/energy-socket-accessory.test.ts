@@ -1,11 +1,12 @@
-import { EnergySocketAccessory } from './energy-socket-accessory';
-import { Interceptable, MockAgent, setGlobalDispatcher } from 'undici';
-import { mockApiUrl, mockFirmwareVersion } from './api/mocks/api';
-import { mockIdentifyResponse } from './api/mocks/data/identify';
-import { mockBasicInformationResponse } from './api/mocks/data/basic';
-import { accessoryMock, platformMock } from './mocks/platform';
-import { mockStateResponse } from './api/mocks/data/state';
 import { EnergySocketApi } from 'homewizard-energy-api';
+import { Interceptable, MockAgent, setGlobalDispatcher } from 'undici';
+import { expect } from 'vitest';
+import { mockApiUrl, mockFirmwareVersion } from './api/mocks/api';
+import { mockBasicInformationResponse } from './api/mocks/data/basic';
+import { mockIdentifyResponse } from './api/mocks/data/identify';
+import { mockStateResponse } from './api/mocks/data/state';
+import { EnergySocketAccessory } from './energy-socket-accessory';
+import { accessoryMock, platformMock } from './mocks/platform';
 
 let mockApiAgent: MockAgent;
 let mockApiPool: Interceptable;
@@ -14,6 +15,7 @@ let mockApi: EnergySocketApi;
 
 describe('EnergySocketAccessory', () => {
   beforeEach(() => {
+    vi.useFakeTimers();
     mockApiAgent = new MockAgent({
       bodyTimeout: 10,
       keepAliveTimeout: 10,
@@ -32,6 +34,7 @@ describe('EnergySocketAccessory', () => {
   afterEach(async () => {
     await mockApiAgent.close();
     vi.restoreAllMocks();
+    vi.useRealTimers();
   });
 
   it('should create an instance', () => {
@@ -60,7 +63,9 @@ describe('EnergySocketAccessory', () => {
 
     const energySocketAccessory = new EnergySocketAccessory(platformMock, accessoryMock, mockApi);
 
-    expect(energySocketAccessory.handleIdentify()).resolves.toStrictEqual(mockIdentifyResponse);
+    await expect(energySocketAccessory.handleIdentify()).resolves.toStrictEqual(
+      mockIdentifyResponse,
+    );
   });
 
   it('should call handleAccessoryApiError when an error happens on handleIdentify', async () => {
@@ -106,7 +111,7 @@ describe('EnergySocketAccessory', () => {
 
     const energySocketAccessory = new EnergySocketAccessory(platformMock, accessoryMock, mockApi);
 
-    expect(energySocketAccessory.handleSetOn(mockPowerOn)).resolves.toBeUndefined();
+    await expect(energySocketAccessory.handleSetOn(mockPowerOn)).resolves.toBeUndefined();
   });
 
   it('should throw an error when handleSetOn is invoked when switch_lock = true', async () => {
@@ -137,6 +142,10 @@ describe('EnergySocketAccessory', () => {
   });
 
   it('should return the power_on value when handleGetOn is invoked', async () => {
+    vi.spyOn(EnergySocketAccessory.prototype, 'startStatePolling').mockImplementation(() => {
+      return Promise.resolve();
+    });
+
     mockApiPool
       .intercept({
         path: `/api/v1/state`,
@@ -152,13 +161,120 @@ describe('EnergySocketAccessory', () => {
       'setLocalStateResponse',
     );
 
+    try {
+      const energySocketAccessory = new EnergySocketAccessory(platformMock, accessoryMock, mockApi);
+
+      const response = await energySocketAccessory.handleGetOn();
+
+      expect(response).toStrictEqual(mockStateResponse.power_on);
+
+      expect(setLocalStateResponseSpy).toHaveBeenCalledOnce();
+      expect(setLocalStateResponseSpy).toHaveBeenLastCalledWith(mockStateResponse);
+    } catch (error) {
+      expect(error).toBeUndefined();
+    }
+  });
+
+  it('should start polling state and update characteristics when state changes', async () => {
+    // First poll response
+    mockApiPool
+      .intercept({
+        path: `/api/v1/state`,
+        method: 'GET',
+      })
+      .reply(() => ({
+        data: { ...mockStateResponse, power_on: false },
+        statusCode: 200,
+      }));
+
+    const setLocalStateResponseSpy = vi.spyOn(
+      EnergySocketAccessory.prototype,
+      'setLocalStateResponse',
+    );
+
+    const updateCurrentOnStateSpy = vi.spyOn(
+      EnergySocketAccessory.prototype,
+      'updateCurrentOnState',
+    );
+
+    const syncOutletInUseStateWithOnStateSpy = vi.spyOn(
+      EnergySocketAccessory.prototype,
+      'syncOutletInUseStateWithOnState',
+    );
+
     const energySocketAccessory = new EnergySocketAccessory(platformMock, accessoryMock, mockApi);
 
-    const response = await energySocketAccessory.handleGetOn();
+    expect(energySocketAccessory).toBeDefined();
 
-    expect(response).toStrictEqual(mockStateResponse.power_on);
+    // Wait for first poll
+    await vi.advanceTimersByTimeAsync(1000);
 
+    // Verify the local state response is set
     expect(setLocalStateResponseSpy).toHaveBeenCalledOnce();
-    expect(setLocalStateResponseSpy).toHaveBeenCalledWith(mockStateResponse);
+    expect(setLocalStateResponseSpy).toHaveBeenLastCalledWith({
+      ...mockStateResponse,
+      power_on: false,
+    });
+
+    // Verify the characteristic is updated, it should be updated with false, which is the API response
+    expect(updateCurrentOnStateSpy).toHaveBeenCalledOnce();
+    expect(updateCurrentOnStateSpy).toHaveBeenLastCalledWith(false);
+
+    expect(syncOutletInUseStateWithOnStateSpy).toHaveBeenCalledOnce();
+    expect(syncOutletInUseStateWithOnStateSpy).toHaveBeenLastCalledWith(false);
+
+    mockApiPool
+      .intercept({
+        path: `/api/v1/state`,
+        method: 'GET',
+      })
+      .reply(() => ({
+        data: { ...mockStateResponse, power_on: true },
+        statusCode: 200,
+      }));
+
+    // Fast forward to the next poll
+    await vi.advanceTimersByTimeAsync(1000);
+
+    // API now returns true
+    expect(setLocalStateResponseSpy).toHaveBeenCalledTimes(2);
+    expect(setLocalStateResponseSpy).toHaveBeenLastCalledWith({
+      ...mockStateResponse,
+      power_on: true,
+    });
+
+    // Verify the characteristic is updated, it should be updated with true, which is the API response
+    expect(updateCurrentOnStateSpy).toHaveBeenCalledTimes(2);
+    expect(updateCurrentOnStateSpy).toHaveBeenLastCalledWith(true);
+
+    expect(syncOutletInUseStateWithOnStateSpy).toHaveBeenCalledTimes(2);
+    expect(syncOutletInUseStateWithOnStateSpy).toHaveBeenLastCalledWith(true);
+  });
+
+  it('should stop polling when stopStatePolling is called', async () => {
+    // Setup the API mock before creating spy
+    mockApiPool
+      .intercept({
+        path: `/api/v1/state`,
+        method: 'GET',
+      })
+      .reply(() => ({
+        data: mockStateResponse,
+        statusCode: 200,
+      }));
+
+    const energySocketAccessory = new EnergySocketAccessory(platformMock, accessoryMock, mockApi);
+
+    // Create spy after the accessory is instantiated
+    const getStateSpy = vi.spyOn(mockApi, 'getState');
+
+    // Stop polling
+    energySocketAccessory.stopStatePolling();
+
+    // Advance time
+    await vi.advanceTimersByTimeAsync(2000);
+
+    // Verify no more polls occurred after stopping
+    expect(getStateSpy).not.toHaveBeenCalled();
   });
 });

@@ -1,12 +1,12 @@
-import { HomeWizardApi, HomeWizardApiError, HomeWizardApiResponseError } from './api';
-import { loggerMock } from '../mocks/logger';
-import { mockBasicInformationResponse } from './mocks/data/basic';
-import { mockStateResponse } from './mocks/data/state';
-import { mockIdentifyResponse } from './mocks/data/identify';
-import { mockApiUrl } from './mocks/api';
 import { Interceptable, MockAgent, setGlobalDispatcher } from 'undici';
-import { HomeWizardApiStateResponse, HomeWizardDeviceTypes } from './types';
+import { loggerMock } from '../mocks/logger';
+import { HomeWizardApi, HomeWizardApiError, HomeWizardApiResponseError } from './api';
+import { mockApiUrl } from './mocks/api';
+import { mockBasicInformationResponse } from './mocks/data/basic';
 import { mockEnergySocketDataResponse, mockP1MeterDataResponse } from './mocks/data/data';
+import { mockIdentifyResponse } from './mocks/data/identify';
+import { mockStateResponse } from './mocks/data/state';
+import { HomeWizardApiStateResponse, HomeWizardDeviceTypes } from './types';
 
 let mockApiAgent: MockAgent;
 let mockApiPool: Interceptable;
@@ -68,7 +68,7 @@ describe('HomeWizardApi', () => {
 
     const responseFn = () => homeWizardApi.getBasicInformation();
 
-    expect(responseFn()).rejects.toThrowError(
+    await expect(responseFn()).rejects.toThrowError(
       'Api GET call at http://localhost/api failed with status 500 and response data: Server error!',
     );
   });
@@ -118,7 +118,7 @@ describe('HomeWizardApi', () => {
 
     const responseFn = () => homeWizardApi.getState();
 
-    expect(responseFn()).rejects.toThrowError(
+    await expect(responseFn()).rejects.toThrowError(
       'Api GET call at http://localhost/api/v1/state failed with status 500 and response data: Server error!',
     );
   });
@@ -174,7 +174,7 @@ describe('HomeWizardApi', () => {
         power_on: true,
       });
 
-    expect(responseFn()).rejects.toThrowError(
+    await expect(responseFn()).rejects.toThrowError(
       'Api PUT call at http://localhost/api/v1/state failed with status 500 and response data: Server error!',
     );
   });
@@ -210,7 +210,7 @@ describe('HomeWizardApi', () => {
 
     const responseFn = () => homeWizardApi.putIdentify(3);
 
-    expect(responseFn()).rejects.toThrowError(
+    await expect(responseFn()).rejects.toThrowError(
       'Api PUT call at http://localhost/api/v1/identify failed with status 500 and response data: Server error!',
     );
   });
@@ -220,7 +220,7 @@ describe('HomeWizardApi', () => {
 
     const identifyFn = async () => homeWizardApi.putIdentify(firmwareVersion);
 
-    expect(identifyFn()).rejects.toThrow(
+    await expect(identifyFn()).rejects.toThrow(
       'Cannot identify this Energy Socket. Firmware version is 2. But the identify feature is only available on Energy Sockets with firmware version 3.00 or later.',
     );
   });
@@ -230,7 +230,7 @@ describe('HomeWizardApi', () => {
 
     const identifyFn = async () => homeWizardApi.putIdentify(firmwareVersion);
 
-    expect(identifyFn()).rejects.toThrow(
+    await expect(identifyFn()).rejects.toThrow(
       'Cannot identify this Energy Socket. The firmware version is not set.',
     );
   });
@@ -240,7 +240,7 @@ describe('HomeWizardApi', () => {
 
     const identifyFn = async () => homeWizardApi.putIdentify(firmwareVersion);
 
-    expect(identifyFn()).rejects.toThrow(
+    await expect(identifyFn()).rejects.toThrow(
       'Cannot identify this Energy Socket. The firmware version is not set.',
     );
   });
@@ -280,7 +280,7 @@ describe('HomeWizardApi', () => {
   it('should throw an error when the productType parameter has an unsupported product type', async () => {
     const dataFn = () => homeWizardApi.getData('SOME-THING' as never);
 
-    expect(dataFn).rejects.toThrowError(
+    await expect(dataFn()).rejects.toThrowError(
       'Product type "SOME-THING" is not supported for this API call.',
     );
   });
@@ -298,7 +298,7 @@ describe('HomeWizardApi', () => {
 
     const dataFn = () => homeWizardApi.getData(HomeWizardDeviceTypes.WIFI_ENERGY_SOCKET);
 
-    expect(dataFn()).rejects.toThrowError(
+    await expect(dataFn()).rejects.toThrowError(
       'Api GET call at http://localhost/api/v1/data failed with status 500 and response data: Server error!',
     );
   });

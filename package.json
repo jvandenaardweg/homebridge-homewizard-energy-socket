@@ -74,7 +74,7 @@
     "@types/validator": "^13.11.5",
     "@typescript-eslint/eslint-plugin": "^6.10.0",
     "@typescript-eslint/parser": "^6.10.0",
-    "@vitest/coverage-istanbul": "^0.34.6",
+    "@vitest/coverage-istanbul": "^2.1.8",
     "dotenv-cli": "^7.3.0",
     "eslint": "^8.53.0",
     "homebridge": "^1.7.0",
@@ -87,7 +87,7 @@
     "resolve-tspaths": "^0.8.17",
     "rimraf": "^5.0.5",
     "typescript": "^5.2.2",
-    "vitest": "^0.34.6"
+    "vitest": "^2.1.8"
   },
   "dependencies": {
     "bonjour-service": "^1.1.1",
