@@ -441,6 +441,9 @@ export class EnergySocketAccessory {
         );
       }
 
+      // Stop the state polling, it can interfere with this request
+      this.stopStatePolling();
+
       const response = await this.energySocketApi.updateState({
         power_on: value as boolean,
       });
@@ -455,6 +458,9 @@ export class EnergySocketAccessory {
       const fallbackErrorMessage = 'A unknown error occurred while setting the ON state';
 
       throw this.handleAccessoryApiError(error, fallbackErrorMessage);
+    } finally {
+      // Start the state polling again, because it was stopped in the try block
+      this.startStatePolling();
     }
   }
 
