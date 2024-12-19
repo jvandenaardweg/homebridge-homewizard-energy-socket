@@ -7,6 +7,7 @@ import {
 
 import { HomebridgeHomeWizardEnergySocket } from '@/platform';
 import { EnergySocketApi, IdentifyResponse, StateResponse } from 'homewizard-energy-api';
+import Undici from 'undici';
 import { ConfigSchemaEnergySocket } from './config.schema';
 import { POLLING_STATE_INTERVAL, SHOW_POLLING_ERRORS_INTERVAL } from './settings';
 import {
@@ -526,8 +527,8 @@ export class EnergySocketAccessory {
 
       // Only update if the state has changed to avoid unnecessary updates
       if (currentOnState !== response.power_on) {
-        this.log.debug(`State polling detected change: ${response.power_on ? 'ON' : 'OFF'}`);
-        this.log.debug(
+        this.log.info(`State polling detected change: ${response.power_on ? 'ON' : 'OFF'}`);
+        this.log.info(
           `Current On state "${currentOnState}", will be updated to "${response.power_on}"`,
         );
 
@@ -536,7 +537,11 @@ export class EnergySocketAccessory {
         this.syncOutletInUseStateWithOnState(response.power_on);
       }
     } catch (error) {
-      this.log.debug('Error polling state:', error);
+      if (error instanceof Undici.errors.HeadersTimeoutError) {
+        this.log.debug('Error during state polling. Device is probably offline.', error);
+      } else {
+        this.log.debug('Error polling state:', error);
+      }
     }
 
     // Store the timeout ID so we can clear it later
