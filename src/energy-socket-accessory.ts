@@ -35,7 +35,7 @@ export class EnergySocketAccessory {
   longPollErrorCount = 0;
   longPollCrossedThresholdAboveAt: Date | null = null;
   longPollCrossedThresholdBelowAt: Date | null = null;
-  private statePollingErrorCount = 0;
+  statePollingErrorCount = 0;
 
   // Add a method to allow setting the service for testing
   protected setService(service: Service) {
@@ -546,21 +546,24 @@ export class EnergySocketAccessory {
         this.syncOutletInUseStateWithOnState(response.power_on);
       }
     } catch (error) {
-      const isFirstError = this.statePollingErrorCount === 0;
-      const isErrorCountAfterInterval = this.statePollingErrorCount > SHOW_POLLING_ERRORS_INTERVAL;
+      // Increment the error count first
+      this.statePollingErrorCount += 1;
+
+      const isFirstError = this.statePollingErrorCount === 1;
+      const isErrorCountAfterInterval = this.statePollingErrorCount >= SHOW_POLLING_ERRORS_INTERVAL;
 
       // Only show the error if it's the first error or after the interval
-      if (isErrorCountAfterInterval || isFirstError) {
+      if (isFirstError || isErrorCountAfterInterval) {
         if (error instanceof Undici.errors.HeadersTimeoutError) {
           this.log.error(
             `Error during state polling. Device is probably offline.${
-              this.statePollingErrorCount ? ` Total errors: ${this.statePollingErrorCount}` : ''
+              this.statePollingErrorCount > 1 ? ` Total errors: ${this.statePollingErrorCount}` : ''
             }`,
           );
         } else {
           this.log.error(
             `Error polling state:${
-              this.statePollingErrorCount ? ` Total errors: ${this.statePollingErrorCount}` : ''
+              this.statePollingErrorCount > 1 ? ` Total errors: ${this.statePollingErrorCount}` : ''
             }`,
             error,
           );
@@ -570,9 +573,6 @@ export class EnergySocketAccessory {
           // Reset the counter after showing the error
           this.statePollingErrorCount = 0;
         }
-      } else {
-        // Continue counting
-        this.statePollingErrorCount += 1;
       }
     }
 

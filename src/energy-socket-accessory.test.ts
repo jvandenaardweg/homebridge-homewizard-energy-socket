@@ -7,6 +7,7 @@ import { mockIdentifyResponse } from './api/mocks/data/identify';
 import { mockStateResponse } from './api/mocks/data/state';
 import { EnergySocketAccessory } from './energy-socket-accessory';
 import { accessoryMock, platformMock } from './mocks/platform';
+import { SHOW_POLLING_ERRORS_INTERVAL } from './settings';
 
 let mockApiAgent: MockAgent;
 let mockApiPool: Interceptable;
@@ -276,5 +277,84 @@ describe('EnergySocketAccessory', () => {
 
     // Verify no more polls occurred after stopping
     expect(getStateSpy).not.toHaveBeenCalled();
+  });
+
+  // ... existing imports ...
+
+  it('should handle polling errors according to interval', async () => {
+    const logErrorSpy = vi.spyOn(platformMock.log, 'error');
+
+    // Mock API to always throw an error
+    mockApiPool
+      .intercept({
+        path: `/api/v1/state`,
+        method: 'GET',
+      })
+      .reply(() => {
+        throw new Error('Polling failed');
+      });
+
+    const energySocketAccessory = new EnergySocketAccessory(platformMock, accessoryMock, mockApi);
+
+    expect(energySocketAccessory).toBeDefined();
+
+    // First poll should log error
+    await vi.advanceTimersByTimeAsync(999); // 999 because of the first poll on the constructor, if we do 1000 it's already on the second poll
+
+    expect(logErrorSpy).toHaveBeenCalledTimes(1);
+    expect(logErrorSpy).toHaveBeenLastCalledWith(
+      '[Energy Socket: HWE-SKT 1234567890] -> ',
+      'Error polling state:',
+      expect.any(Error),
+    );
+
+    expect(energySocketAccessory.statePollingErrorCount).toBe(1);
+    expect(logErrorSpy).toHaveBeenCalledTimes(1);
+
+    // Fast forward to the next poll
+    await vi.advanceTimersByTimeAsync(1);
+
+    expect(energySocketAccessory.statePollingErrorCount).toBe(2);
+
+    // Count should be updated, but logger should not have been called again
+    expect(logErrorSpy).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(energySocketAccessory.statePollingErrorCount).toBe(3);
+
+    // Count should be updated, but logger should not have been called again
+    expect(logErrorSpy).toHaveBeenCalledTimes(1);
+
+    // Set the error count to the interval
+    energySocketAccessory.statePollingErrorCount = SHOW_POLLING_ERRORS_INTERVAL;
+
+    await vi.advanceTimersByTimeAsync(1000);
+
+    // The logger should now have been called again and display the total errors
+    expect(logErrorSpy).toHaveBeenCalledTimes(2);
+    expect(logErrorSpy).toHaveBeenLastCalledWith(
+      '[Energy Socket: HWE-SKT 1234567890] -> ',
+      'Error polling state: Total errors: 901',
+      expect.any(Error),
+    );
+
+    // The error count should be reset to 0, since we've reached the interval
+    expect(energySocketAccessory.statePollingErrorCount).toBe(0);
+
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(logErrorSpy).toHaveBeenCalledTimes(3);
+    expect(logErrorSpy).toHaveBeenLastCalledWith(
+      '[Energy Socket: HWE-SKT 1234567890] -> ',
+      'Error polling state:',
+      expect.any(Error),
+    );
+
+    // Fast forward to the next poll
+    await vi.advanceTimersByTimeAsync(1000);
+
+    // Should not have been called again
+    expect(logErrorSpy).toHaveBeenCalledTimes(3);
   });
 });
